@@ -18,7 +18,6 @@ public class DriveMode extends LinearOpMode {
         DcMotor linearMotor = hardwareMap.dcMotor.get("linearMotor");
         // Servo config
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
-
         frontLeft.setDirection(DcMotor.Direction.FORWARD);
         backLeft.setDirection(DcMotor.Direction.FORWARD);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
