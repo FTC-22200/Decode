@@ -15,14 +15,14 @@ public class DriveMode extends LinearOpMode {
         DcMotor backLeft = hardwareMap.dcMotor.get("backLeft");
         DcMotor frontRight = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRight = hardwareMap.dcMotor.get("backRight");
-        DcMotor linearMotor = hardwareMap.dcMotor.get("linearMotor");
+        //DcMotor linearMotor = hardwareMap.dcMotor.get("linearMotor");
         // Servo config
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         frontLeft.setDirection(DcMotor.Direction.FORWARD);
         backLeft.setDirection(DcMotor.Direction.FORWARD);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
-        linearMotor.setDirection(DcMotor.Direction.FORWARD);
+        //linearMotor.setDirection(DcMotor.Direction.FORWARD);
 
 
         final double INCREMENT   = 0.01;     // amount to slew servo each CYCLE_MS cycle
@@ -88,11 +88,11 @@ public class DriveMode extends LinearOpMode {
             backRight.setPower(bR_Motor);
             // Linear motor control
             if (gamepad2.right_bumper) {
-                linearMotor.setPower(-1.0); // Reverse if right bumper pressed
+                //linearMotor.setPower(-1.0); // Reverse if right bumper pressed
             } else if (gamepad2.right_trigger > 0) {
-                linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
+                //linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
             } else {
-                linearMotor.setPower(0); // Stop linear motor if no input
+                //linearMotor.setPower(0); // Stop linear motor if no input
             }
             boxServo.setPosition(position);
             sleep(CYCLE_MS);
