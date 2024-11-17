@@ -75,6 +75,7 @@ public class DriveMode extends LinearOpMode {
                     }
                 }
             }
+
             if (boxDown) {
                 while (!rampUp) {
                     position2 += INCREMENT2;
