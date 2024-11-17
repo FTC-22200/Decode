@@ -104,14 +104,14 @@ public class DriveMode extends LinearOpMode {
             if (gamepad2.dpad_up) {
                 // Move forward by 0.01
                 intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-                intakePower += 0.01;
+                intakePower += 0.05;
                 if (intakePower > 1.0) {
                     intakePower = 1.0; // Ensure the power doesn't exceed the maximum
                 }
             } else if (gamepad2.dpad_down) {
                 // Move backward by 0.01
                 intakeMotor.setDirection(DcMotor.Direction.REVERSE);
-                intakePower += 0.01;
+                intakePower += 0.05;
                 if (intakePower > 1.0) {
                     intakePower = 1.0; // Ensure the power doesn't exceed the maximum
                 }
@@ -120,9 +120,9 @@ public class DriveMode extends LinearOpMode {
 
             // Wrist servo control
             if (gamepad2.b) {
-                wristServo.setPosition(1.0); // Changed from 1.8 to 1.0, assuming 1.0 is maximum
+                wristServo.setPosition(0.65); // Changed from 1.8 to 1.0, assuming 1.0 is maximum
             } else if (gamepad2.a) {
-                wristServo.setPosition(0.65); // Adjusted to a valid position
+                wristServo.setPosition(0.15); // Adjusted to a valid position
             }
 
             // Intake servo control
