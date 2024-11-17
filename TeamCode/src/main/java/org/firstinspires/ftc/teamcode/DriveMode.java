@@ -16,6 +16,7 @@ public class DriveMode extends LinearOpMode {
         DcMotor frontRight = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRight = hardwareMap.dcMotor.get("backRight");
         DcMotor linearMotor = hardwareMap.dcMotor.get("linearMotor");
+        linearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
 
         // Servo config
@@ -62,7 +63,7 @@ public class DriveMode extends LinearOpMode {
 
             // Linear motor control
             if (gamepad2.right_bumper) {
-                linearMotor.setPower(-1.0); // Reverse if right bumper pressed
+                linearMotor.setPower(-0.4); // Reverse if right bumper pressed
             } else if (gamepad2.right_trigger > 0) {
                 linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
             } else {
@@ -135,10 +136,6 @@ public class DriveMode extends LinearOpMode {
             }
 
             // Update telemetry
-            telemetry.addData("Box Down", boxDown);
-            telemetry.addData("Box Up", boxUp);
-            telemetry.addData("Ramp Up", rampUp);
-            telemetry.update();
             sleep(CYCLE_MS);
             idle();
         }
