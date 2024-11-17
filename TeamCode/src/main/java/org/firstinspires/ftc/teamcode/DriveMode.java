@@ -28,13 +28,13 @@ public class DriveMode extends LinearOpMode {
         linearMotor.setDirection(DcMotor.Direction.FORWARD);
 
 
-        final double INCREMENT   = 0.01;     // amount to slew servo each CYCLE_MS cycle
+        final double INCREMENT2   = 0.1;     // amount to slew servo each CYCLE_MS cycle
         final int    CYCLE_MS    =   50;     // period of each cycle
-        final double MAX_POS     =  1.0;     // Maximum rotational position
-        final double MIN_POS     =  0.0;     // Minimum rotational position
+        final double MAX_POS2     =  0.4;     // Maximum rotational position
+        final double MIN_POS2     =  1.0;     // Minimum rotational position
 
         // Define class members
-        double  position = MIN_POS; // Start at halfway position
+        double  position2 = 1; // Start at halfway position
         boolean rampUp = true;
         boolean boxUp = false;
         boolean boxDown = false;
@@ -55,10 +55,11 @@ public class DriveMode extends LinearOpMode {
             double bR_Motor = (y+x-rx)/denominator; // bR = backRight
 
             // Make sure x is pressed and y is not pressed
-            if (gamepad2.x & !gamepad2.y & !boxDown & !boxUp) {
-                boxUp = true;
-            } else if (gamepad2.y & !boxDown & !boxUp) {
+            if (gamepad2.x & !gamepad2.y & !boxDown & !boxUp & !rampUp) {
                 boxDown = true;
+            }
+            if (gamepad2.y & !gamepad2.x & !boxDown & !boxUp & rampUp) {
+                boxUp = true;
             }
             if (boxUp & boxDown) {
                 boxDown = false;
@@ -66,21 +67,21 @@ public class DriveMode extends LinearOpMode {
             }
             if (boxUp) {
                 while (rampUp) {
-                    position += INCREMENT;
-                    if (position >= MAX_POS) {
+                    position2 -= INCREMENT2;
+                    if (position2 <= MAX_POS2) {
                         rampUp = false;
                         boxUp = false;
-                        position = MAX_POS;
+                        position2 = MAX_POS2;
                     }
                 }
             }
             if (boxDown) {
                 while (!rampUp) {
-                    position -= INCREMENT;
-                    if (position <= MIN_POS) {
+                    position2 += INCREMENT2;
+                    if (position2 >= MIN_POS2) {
                         rampUp = true;
                         boxDown = false;
-                        position = MIN_POS;
+                        position2 = MIN_POS2;
                     }
                 }
             }
@@ -94,10 +95,15 @@ public class DriveMode extends LinearOpMode {
                 linearMotor.setPower(-1.0); // Reverse if right bumper pressed
             } else if (gamepad2.right_trigger > 0) {
                 linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
+
             } else {
-                linearMotor.setPower(0); // Stop linear motor if no input
+                linearMotor.setPower(0.0); // Stop linear motor if no input
             }
-            boxServo.setPosition(position);
+            boxServo.setPosition(position2);
+            telemetry.addData("<", boxDown);
+            telemetry.addData("<", boxUp);
+            telemetry.addData("<", rampUp);
+            telemetry.update();
             sleep(CYCLE_MS);
             idle();
         }
