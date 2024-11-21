@@ -46,9 +46,9 @@ public class DriveMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = gamepad1.left_stick_y; // For forwards/backwards movement
-            double x = -gamepad1.left_stick_x * 1.1; // The 1.1 multiplier is to counteract imperfect strafing
-            double rx = gamepad1.right_stick_x; // Turning left/right
+            double y = -gamepad1.left_stick_y; // For forwards/backwards movement
+            double x = gamepad1.left_stick_x * 1.1; // The 1.1 multiplier is to counteract imperfect strafing
+            double rx = -gamepad1.right_stick_x; // Turning left/right
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
             double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
@@ -109,6 +109,7 @@ public class DriveMode extends LinearOpMode {
                 if (intakePower > 1.0) {
                     intakePower = 1.0; // Ensure the power doesn't exceed the maximum
                 }
+                intakeMotor.setPower(intakePower);
             } else if (gamepad2.dpad_down) {
                 // Move backward by 0.01
                 intakeMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -116,8 +117,9 @@ public class DriveMode extends LinearOpMode {
                 if (intakePower > 1.0) {
                     intakePower = 1.0; // Ensure the power doesn't exceed the maximum
                 }
+                intakeMotor.setPower(intakePower);
             }
-            intakeMotor.setPower(intakePower);
+
 
             // Wrist servo control
             if (gamepad2.b) {
