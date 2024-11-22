@@ -51,6 +51,7 @@ public class DriveMode extends LinearOpMode {
             double rx = -gamepad1.right_stick_x; // Turning left/right
 
             double speedMultiplier = 1.0;
+            
             if (gamepad1.left_trigger > 0.5) {
                 speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
             }
