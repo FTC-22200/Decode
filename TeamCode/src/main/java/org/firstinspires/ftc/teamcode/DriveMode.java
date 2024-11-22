@@ -50,6 +50,10 @@ public class DriveMode extends LinearOpMode {
             double x = gamepad1.left_stick_x * 1.1; // The 1.1 multiplier is to counteract imperfect strafing
             double rx = -gamepad1.right_stick_x; // Turning left/right
 
+            double speedMultiplier = 1.0;
+            if (gamepad1.left_trigger > 0.5) {
+                speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
+            }
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
             double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
             double bL_Motor = (y - x + rx) / denominator; // bL = BackLeft
@@ -103,22 +107,24 @@ public class DriveMode extends LinearOpMode {
             // Intake motor control
             double intakePower = intakeMotor.getPower();
             if (gamepad2.dpad_up) {
-                // Move forward by 0.01
+                // Move forward by 0.25
                 intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-                intakePower += 0.05;
+                intakePower += 0.25;
                 if (intakePower > 1.0) {
                     intakePower = 1.0; // Ensure the power doesn't exceed the maximum
                 }
-                intakeMotor.setPower(intakePower);
+                sleep(100);
             } else if (gamepad2.dpad_down) {
                 // Move backward by 0.01
                 intakeMotor.setDirection(DcMotor.Direction.REVERSE);
-                intakePower += 0.05;
-                if (intakePower > 1.0) {
-                    intakePower = 1.0; // Ensure the power doesn't exceed the maximum
+                intakePower -= 0.25;
+                if (intakePower < 0.0) {
+                    intakePower = 0.0; // Ensure the power doesn't exceed the maximum
                 }
+            }    sleep(100);
+
+                idle();
                 intakeMotor.setPower(intakePower);
-            }
 
 
             // Wrist servo control
@@ -138,6 +144,11 @@ public class DriveMode extends LinearOpMode {
             }
 
             // Update telemetry
+            telemetry.addData("Box Down", boxDown);
+            telemetry.addData("Box Up", boxUp);
+            telemetry.addData("Ramp Up", rampUp);
+            telemetry.addData("Intake Motor", intakePower);
+            telemetry.update();
             sleep(CYCLE_MS);
             idle();
         }
