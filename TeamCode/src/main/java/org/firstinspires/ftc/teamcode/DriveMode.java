@@ -46,15 +46,15 @@ public class DriveMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y; // For forwards/backwards movement
-            double x = gamepad1.left_stick_x * 1.1; // The 1.1 multiplier is to counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x; // Turning left/right
 
             double speedMultiplier = 1.0;
             
             if (gamepad1.left_trigger > 0.5) {
                 speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
             }
+            double y = -gamepad1.left_stick_y * speedMutiplier; // For forwards/backwards movement
+            double x = gamepad1.left_stick_x * 1.1 * speedMutiplier; // The 1.1 multiplier is to counteract imperfect strafing
+            double rx = -gamepad1.right_stick_x * speedMutiplier; // Turning left/right
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
             double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
             double bL_Motor = (y - x + rx) / denominator; // bL = BackLeft
