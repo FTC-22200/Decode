@@ -52,15 +52,15 @@ public class auto_left extends LinearOpMode {
 
             // Step 2: Move left
             setMotorPower(-0.5, 0.5, 0.5, -0.5);
-            sleep(1700); // Move left for 1.5 seconds
+            sleep(1900); // Move left for 1.5 seconds
 
             // Spin to face the basket
             setMotorPower(-0.25, 0.25, -0.25, 0.25);
-            sleep(1100); // Spin for 2 seconds
+            sleep(1050); // Spin for 1.05 seconds
 
             // Step 3: Move back
             setMotorPower(-0.5, -0.5, -0.5, -0.5);
-            sleep(365); // Move back for 0.2 seconds
+            sleep(295); // Move back for 0.2 seconds
 
 
             setMotorPower(0,0,0,0);
@@ -73,6 +73,11 @@ public class auto_left extends LinearOpMode {
             linearMotor.setPower(0.1); // Retract linear motor
             boxServo.setPosition(0.4);
             sleep(2000);
+
+            setMotorPower(0.5, 0.5, 0.5, 0.5);
+            sleep(150); // Move forward for 0.1 seconds
+
+            setMotorPower(0,0,0,0);
 
             linearMotor.setPower(-0.4);
             boxServo.setPosition(0.9); // Move box servo to position 0.4
