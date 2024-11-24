@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous(name = "Auto_right")
 //@Disabled
-public class auto extends LinearOpMode {
+public class auto_right extends LinearOpMode {
 
     private DcMotor frontLeft = null;
     private DcMotor backLeft = null;
@@ -32,15 +32,15 @@ public class auto extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
 
-            // Step 2: Move left
+            // Step 2: Move up
             setMotorPower(0.5, 0.5, 0.5, 0.5);
-            sleep(300); // Move left for 2.5 seconds
+            sleep(300); // Move up for 0.3 seconds
 
             setMotorPower(0.5,-0.5,-0.5,0.5);
-            sleep(2000);
+            sleep(2800); // Strafe right for 2.8 seconds
 
             setMotorPower(-0.5,-0.5,-0.5,-0.5);
-            sleep(400);
+            sleep(400); // Move down for 0.4 seconds
 
             // Stop all motors
             setMotorPower(0, 0, 0, 0);
