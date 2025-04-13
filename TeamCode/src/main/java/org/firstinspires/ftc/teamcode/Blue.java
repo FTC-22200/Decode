@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
-import android.graphics.Color;
-import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -11,14 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.opencv.ImageRegion;
-import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
-
 @TeleOp
-public class red extends LinearOpMode {
+public class Blue extends LinearOpMode {
     @SuppressLint("DefaultLocale")
     @Override
     public void runOpMode() {
@@ -63,6 +55,7 @@ public class red extends LinearOpMode {
         int Start = wristMotor.getCurrentPosition();
         int delta = 300;
         int End = Start + delta;
+        Start = Start + 100;
         double maxSafeTemperature = 75.0; // Define a maximum safe temperature
         double forr = 0;
 
@@ -107,13 +100,13 @@ public class red extends LinearOpMode {
                 linearMotor.setPower(0.0); // Stop linear motor if no input
             }
             if (gamepad2.y) {
-              if (rampUp) {
-                  boxServo.setPosition(0.7);
-                  rampUp = false;
-              } else {
-                  boxServo.setPosition(0.2);
-                  rampUp = true;
-              }
+                if (rampUp) {
+                    boxServo.setPosition(0.7);
+                    rampUp = false;
+                } else {
+                    boxServo.setPosition(0.2);
+                    rampUp = true;
+                }
             }
             while (gamepad2.y) {
                 idle();
@@ -150,51 +143,53 @@ public class red extends LinearOpMode {
                 wristMotor.setPower(0);
             }
 
-                int red = colorSensor.red();
-                int blue = colorSensor.blue();
-                int green = colorSensor.green();
+            int red = colorSensor.red();
+            int blue = colorSensor.blue();
+            int green = colorSensor.green();
 
             String detectedColor = "UNKNOWN";
             if (red > green && red > blue) {
                 detectedColor = "RED";
             } else if (blue > red && blue > green) {
                 detectedColor = "BLUE";
-            } else if (green > blue && red > blue) {
+            } else if (green > blue && red > blue && green > 650) {
                 detectedColor = "YELLOW";
             }
 
-            if (gamepad2.left_bumper && detectedColor.equals("BLUE")) {
-                leftWheelServo.setPosition(0.0); // Full forward
-                rightWheelServo.setPosition(1.0);
-            } else if (gamepad2.left_bumper && detectedColor.equals("UNKNOWN")) {
-                leftWheelServo.setPosition(0.0); // Full forward
-                rightWheelServo.setPosition(1.0);
-            } else if (gamepad2.left_bumper && detectedColor.equals("YELLOW")) {
+            if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("BLUE")) {
+                leftWheelServo.setPosition(0.5); // Stop
+                rightWheelServo.setPosition(0.5);
+            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("UNKNOWN")) {
+                leftWheelServo.setPosition(1.0); // Full forward
+                rightWheelServo.setPosition(0.0);
+            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW")) {
                 leftWheelServo.setPosition(0.5); // Stop the servo
                 rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_bumper && detectedColor.equals("RED")) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
+            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
+                leftWheelServo.setPosition(1.0); // Full forward
+                rightWheelServo.setPosition(0.0);
+            } else if (gamepad2.left_stick_y < 0.0) {
+                leftWheelServo.setPosition(0.0); // Full forward
+                rightWheelServo.setPosition(1.0);
             } else {
-                leftWheelServo.setPosition(0.5); // Full forward
+                leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
             }
 
-                // Optional: Add telemetry to display servo positions
-                telemetry.addData("wristMotor position", wristMotor.getCurrentPosition());
-                telemetry.addData("Left Wheel Servo Position", leftWheelServo.getPosition());
-                telemetry.addData("Right Wheel Servo Position", rightWheelServo.getPosition());
-                telemetry.addData("box Servo Position", boxServo.getPosition());
-                telemetry.addData("linearMotor position", linearMotor.getCurrentPosition());
-                telemetry.addData("Ramp Up", rampUp);
-                telemetry.addData("Red", red);
-                telemetry.addData("Blue", blue);
-                telemetry.addData("Green", green);
-                telemetry.addData("detectedColor", detectedColor);
-                telemetry.update();
-                sleep(20);
-                idle();
-            }
+            // Optional: Add telemetry to display servo positions
+            telemetry.addData("wristMotor position", wristMotor.getCurrentPosition());
+            telemetry.addData("Left Wheel Servo Position", leftWheelServo.getPosition());
+            telemetry.addData("Right Wheel Servo Position", rightWheelServo.getPosition());
+            telemetry.addData("box Servo Position", boxServo.getPosition());
+            telemetry.addData("linearMotor position", linearMotor.getCurrentPosition());
+            telemetry.addData("Ramp Up", rampUp);
+            telemetry.addData("Red", red);
+            telemetry.addData("Blue", blue);
+            telemetry.addData("Green", green);
+            telemetry.addData("detectedColor", detectedColor);
+            telemetry.update();
+            sleep(20);
+            idle();
         }
     }
-
+}
