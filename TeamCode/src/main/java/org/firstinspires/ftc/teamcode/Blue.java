@@ -65,6 +65,7 @@ public class Blue extends LinearOpMode {
         boolean rampUp = true;
         boolean wristUp = false;
         boolean wristDown = false;
+        double forWheel = 0.0;
         boolean wristIsUp = true;
 
         waitForStart();
@@ -156,22 +157,20 @@ public class Blue extends LinearOpMode {
                 detectedColor = "YELLOW";
             }
 
-            if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("BLUE")) {
+            if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("BLUE")||gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW")) {
                 leftWheelServo.setPosition(0.5); // Stop
                 rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("UNKNOWN")) {
+
+            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("UNKNOWN")||gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
                 leftWheelServo.setPosition(1.0); // Full forward
                 rightWheelServo.setPosition(0.0);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW")) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
-                leftWheelServo.setPosition(1.0); // Full forward
-                rightWheelServo.setPosition(0.0);
+                forWheel = 0.0;
             } else if (gamepad2.left_stick_y < 0.0) {
                 leftWheelServo.setPosition(0.0); // Full forward
                 rightWheelServo.setPosition(1.0);
+                forWheel = 0.0;
             } else {
+                forWheel = 0.0;
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
             }
