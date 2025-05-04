@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.annotation.SuppressLint;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -16,7 +15,8 @@ public class Blue extends LinearOpMode {
     public void runOpMode() {
 
         ColorSensor colorSensor;
-        // Motor config
+        ColorSensor colorSensor2;
+
         DcMotor frontLeft = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeft = hardwareMap.dcMotor.get("backLeft");
         DcMotor frontRight = hardwareMap.dcMotor.get("frontRight");
@@ -27,13 +27,12 @@ public class Blue extends LinearOpMode {
         DcMotorEx wristMotor = hardwareMap.get(DcMotorEx.class, "wristMotor");
         wristMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         colorSensor = hardwareMap.get(ColorSensor.class, "sensor_color");
+        colorSensor2 = hardwareMap.get(ColorSensor.class, "sensor_color2");
 
-        // Servo config
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         Servo leftWheelServo = hardwareMap.get(Servo.class, "leftWheelServo");
         Servo rightWheelServo = hardwareMap.get(Servo.class, "rightWheelServo");
 
-        // Set default positions
         leftWheelServo.setPosition(0.5);
         rightWheelServo.setPosition(0.5);
         boxServo.setPosition(0.87);
@@ -46,22 +45,20 @@ public class Blue extends LinearOpMode {
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         wristMotor.setDirection(DcMotor.Direction.FORWARD);
 
-
-        final double INCREMENT2 = 0.1; // amount to slew servo each CYCLE_MS cycle
+        final double INCREMENT2 = 0.1;
         final double INCREMENT = 109.5;
-        final int CYCLE_MS = 50;         // period of each cycle
-        final double MAX_POS2 = 0.4;       // Maximum rotational position
-        final double MIN_POS2 = 1.0; // Minimum rotational position
+        final int CYCLE_MS = 50;
+        final double MAX_POS2 = 0.4;
+        final double MIN_POS2 = 1.0;
         int Start = wristMotor.getCurrentPosition();
         int delta = 300;
         int End = Start + delta;
         Start = Start + 100;
-        double maxSafeTemperature = 75.0; // Define a maximum safe temperature
-        double forr = 0;
+        double maxSafeTemperature = 75.0;
+        double forWheel = 0;
 
-        // Define class members
         double position1 = 1;
-        double position2 = 1.0; // Start at maximum position
+        double position2 = 1.0;
         boolean rampUp = true;
         boolean wristUp = false;
         boolean wristDown = false;
@@ -75,30 +72,31 @@ public class Blue extends LinearOpMode {
             double speedMultiplier = 1.0;
 
             if (gamepad1.left_trigger > 0.5) {
-                speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
+                speedMultiplier = 0.25;
             }
-            double y = -gamepad1.left_stick_y * speedMultiplier; // For forwards/backwards movement
-            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier; // The 1.1 multiplier is to counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x * speedMultiplier; // Turning left/right
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
-            double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
-            double bL_Motor = (y - x + rx) / denominator; // bL = BackLeft
-            double fR_Motor = (y - x - rx) / denominator; // fR = FrontRight
-            double bR_Motor = (y + x - rx) / denominator; // bR = BackRight
+
+            double y = -gamepad1.left_stick_y * speedMultiplier;
+            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier;
+            double rx = -gamepad1.right_stick_x * speedMultiplier;
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double fL_Motor = (y + x + rx) / denominator;
+            double bL_Motor = (y - x + rx) / denominator;
+            double fR_Motor = (y - x - rx) / denominator;
+            double bR_Motor = (y + x - rx) / denominator;
 
             frontLeft.setPower(fL_Motor);
             backLeft.setPower(bL_Motor);
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            // Linear motor control
             if (gamepad2.right_bumper) {
-                linearMotor.setPower(-0.4); // Reverse if right bumper pressed
+                linearMotor.setPower(-0.4);
             } else if (gamepad2.right_trigger > 0) {
-                linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
+                linearMotor.setPower(Math.abs(gamepad2.right_trigger));
             } else {
-                linearMotor.setPower(0.0); // Stop linear motor if no input
+                linearMotor.setPower(0.0);
             }
+
             if (gamepad2.y) {
                 if (rampUp) {
                     boxServo.setPosition(0.7);
@@ -111,11 +109,11 @@ public class Blue extends LinearOpMode {
             while (gamepad2.y) {
                 idle();
             }
+
             if (gamepad2.x) {
                 boxServo.setPosition(0.87);
             }
 
-            // Intake motor control
             if (gamepad2.dpad_up) {
                 intakeMotor.setPower(1);
             } else if (gamepad2.dpad_down) {
@@ -123,7 +121,6 @@ public class Blue extends LinearOpMode {
             } else {
                 intakeMotor.setPower(0);
             }
-
 
             if (gamepad2.b) {
                 wristMotor.setPower(0.5);
@@ -147,36 +144,47 @@ public class Blue extends LinearOpMode {
             int blue = colorSensor.blue();
             int green = colorSensor.green();
 
+            int red2 = colorSensor2.red();
+            int blue2 = colorSensor2.blue();
+            int green2 = colorSensor2.green();
+
             String detectedColor = "UNKNOWN";
-            if (red > green && red > blue) {
+            if (blue > green && blue > red) {
                 detectedColor = "RED";
-            } else if (blue > red && blue > green) {
+            } else if (red > blue && red > green) {
                 detectedColor = "BLUE";
             } else if (green > blue && red > blue && green > 650) {
                 detectedColor = "YELLOW";
             }
 
-            if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("BLUE")) {
-                leftWheelServo.setPosition(0.5); // Stop
-                rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("UNKNOWN")) {
-                leftWheelServo.setPosition(1.0); // Full forward
-                rightWheelServo.setPosition(0.0);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW")) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
-                leftWheelServo.setPosition(1.0); // Full forward
-                rightWheelServo.setPosition(0.0);
+            String detectedColor2 = "UNKNOWN";
+            if (blue2 > green2 && blue2 > red2) {
+                detectedColor2 = "RED";
+            } else if (red2 > blue2 && red2 > green2) {
+                detectedColor2 = "BLUE";
+            } else if (green2 > blue2 && red2 > blue2 && green2 > 650) {
+                detectedColor2 = "YELLOW";
+            }
+
+            if (gamepad2.left_stick_y > 0.0) {
+                if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
+                    leftWheelServo.setPosition(0.45);
+                    rightWheelServo.setPosition(0.55);
+                } else if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
+                    leftWheelServo.setPosition(0.5);
+                    rightWheelServo.setPosition(0.5);
+                } else if (detectedColor.equals("BLUE") || detectedColor.equals("UNKNOWN")) {
+                    leftWheelServo.setPosition(0.0);
+                    rightWheelServo.setPosition(1.0);
+                }
             } else if (gamepad2.left_stick_y < 0.0) {
-                leftWheelServo.setPosition(0.0); // Full forward
-                rightWheelServo.setPosition(1.0);
+                leftWheelServo.setPosition(1.0);
+                rightWheelServo.setPosition(0.0);
             } else {
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
             }
 
-            // Optional: Add telemetry to display servo positions
             telemetry.addData("wristMotor position", wristMotor.getCurrentPosition());
             telemetry.addData("Left Wheel Servo Position", leftWheelServo.getPosition());
             telemetry.addData("Right Wheel Servo Position", rightWheelServo.getPosition());
@@ -187,6 +195,10 @@ public class Blue extends LinearOpMode {
             telemetry.addData("Blue", blue);
             telemetry.addData("Green", green);
             telemetry.addData("detectedColor", detectedColor);
+            telemetry.addData("Red2", red2);
+            telemetry.addData("Blue2", blue2);
+            telemetry.addData("Green2", green2);
+            telemetry.addData("detectedColor2", detectedColor2);
             telemetry.update();
             sleep(20);
             idle();

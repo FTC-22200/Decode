@@ -24,6 +24,7 @@ public class Red extends LinearOpMode {
     public void runOpMode() {
 
         ColorSensor colorSensor;
+        ColorSensor colorSensor2;
         // Motor config
         DcMotor frontLeft = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -35,6 +36,7 @@ public class Red extends LinearOpMode {
         DcMotorEx wristMotor = hardwareMap.get(DcMotorEx.class, "wristMotor");
         wristMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         colorSensor = hardwareMap.get(ColorSensor.class, "sensor_color");
+        colorSensor2 = hardwareMap.get(ColorSensor.class, "sensor_color2");
 
         // Servo config
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
@@ -65,7 +67,7 @@ public class Red extends LinearOpMode {
         int End = Start + delta;
         Start = Start + 100;
         double maxSafeTemperature = 75.0; // Define a maximum safe temperature
-        double forr = 0;
+        double forWheel = 0;
 
         // Define class members
         double position1 = 1;
@@ -155,33 +157,62 @@ public class Red extends LinearOpMode {
             int blue = colorSensor.blue();
             int green = colorSensor.green();
 
+            int red2 = colorSensor2.red();
+            int blue2 = colorSensor2.blue();
+            int green2 = colorSensor2.green();
+
             String detectedColor = "UNKNOWN";
             if (red > green && red > blue) {
                 detectedColor = "RED";
             } else if (blue > red && blue > green) {
                 detectedColor = "BLUE";
-            } else if (green > blue && red > blue) {
+            } else if (green > blue && red > blue && green > 650) {
                 detectedColor = "YELLOW";
             }
 
-            if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("BLUE")) {
-                leftWheelServo.setPosition(0.0); // Full forward
-                rightWheelServo.setPosition(1.0);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("UNKNOWN")) {
-                leftWheelServo.setPosition(0.35); // Full forward
-                rightWheelServo.setPosition(0.65);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW")) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
-            } else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
+            String detectedColor2 = "UNKNOWN";
+            if (red2 > green2 && red2 > blue2) {
+                detectedColor2 = "RED";
+            } else if (blue2 > red2 && blue2 > green2) {
+                detectedColor2 = "BLUE";
+            } else if (green2 > blue2 && red2 > blue2 && green2 > 650) {
+                detectedColor2 = "YELLOW";
+            }
+
+            if (gamepad2.left_stick_y > 0.0) {
+                if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
+                    leftWheelServo.setPosition(0.45);
+                    rightWheelServo.setPosition(0.55);
+                } else if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
+                    leftWheelServo.setPosition(0.5);
+                    rightWheelServo.setPosition(0.5);
+                } else if (detectedColor.equals("BLUE") || detectedColor.equals("UNKNOWN")) {
+                    leftWheelServo.setPosition(0.0);
+                    rightWheelServo.setPosition(1.0);
+                }
+            //} else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW") || gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
+                // if (forWheel == 0.0) {
+                //    forWheel = 1.0;
+                //} else if (forWheel > 0.5 && forWheel < 1.0) {
+                //    forWheel -= 0.1;
+                //} else {
+                //    forWheel = 0.5;
+                //}
+                //if (forWheel == 0.5) {
+                //    leftWheelServo.setPosition(0.5); // Stop
+                //    rightWheelServo.setPosition(0.5);
+                //} else {
+                //    leftWheelServo.setPosition(0.65); // Slow pull in
+                //    rightWheelServo.setPosition(0.35);
+                //}
             } else if (gamepad2.left_stick_y < 0.0) {
                 leftWheelServo.setPosition(1.0); // Full forward
                 rightWheelServo.setPosition(0.0);
+                //forWheel = 0.0;
             } else {
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
+                //forWheel = 0.0;
             }
 
             // Optional: Add telemetry to display servo positions
@@ -195,6 +226,10 @@ public class Red extends LinearOpMode {
             telemetry.addData("Blue", blue);
             telemetry.addData("Green", green);
             telemetry.addData("detectedColor", detectedColor);
+            telemetry.addData("Red2", red2);
+            telemetry.addData("Blue2", blue2);
+            telemetry.addData("Green2", green2);
+            telemetry.addData("detectedColor2", detectedColor2);
             telemetry.update();
             sleep(20);
             idle();
