@@ -150,8 +150,8 @@ public class Blue extends LinearOpMode {
                     rightWheelServo.setPosition(1.0);
                 }
             } else if (gamepad2.left_stick_y < 0.0) {
-                leftWheelServo.setPosition(Math.abs(gamepad2.left_stick_y) / 2);
-                rightWheelServo.setPosition(Math.abs(gamepad2.left_stick_y) / 2 + 0.5);
+                leftWheelServo.setPosition(Math.abs(gamepad2.left_stick_y)/2 + 0.5);
+                rightWheelServo.setPosition(0.5-Math.abs(gamepad2.left_stick_y) / 2);
             } else {
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);

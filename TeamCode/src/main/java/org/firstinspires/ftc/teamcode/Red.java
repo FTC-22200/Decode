@@ -192,13 +192,11 @@ public class Red extends LinearOpMode {
                 }
 
             } else if (gamepad2.left_stick_y < 0.0) {
-                leftWheelServo.setPosition(1.0); // Full forward
-                rightWheelServo.setPosition(0.0);
-                //forWheel = 0.0;
+                leftWheelServo.setPosition(Math.abs(gamepad2.left_stick_y)/2 + 0.5);
+                rightWheelServo.setPosition(0.5-Math.abs(gamepad2.left_stick_y) / 2);
             } else {
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
-                //forWheel = 0.0;
             }
 
             // Optional: Add telemetry to display servo positions
