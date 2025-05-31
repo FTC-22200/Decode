@@ -45,23 +45,11 @@ public class Blue extends LinearOpMode {
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         wristMotor.setDirection(DcMotor.Direction.FORWARD);
 
-        final double INCREMENT2 = 0.1;
-        final double INCREMENT = 109.5;
-        final int CYCLE_MS = 50;
-        final double MAX_POS2 = 0.4;
-        final double MIN_POS2 = 1.0;
         int Start = wristMotor.getCurrentPosition();
         int delta = 300;
         int End = Start + delta;
         Start = Start + 100;
-        double maxSafeTemperature = 75.0;
-        double forWheel = 0;
-
-        double position1 = 1;
-        double position2 = 1.0;
         boolean rampUp = true;
-        boolean wristUp = false;
-        boolean wristDown = false;
         boolean wristIsUp = true;
 
         waitForStart();
@@ -69,25 +57,17 @@ public class Blue extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            double speedMultiplier = 1.0;
-
-            if (gamepad1.left_trigger > 0.5) {
-                speedMultiplier = 0.25;
-            }
+            double speedMultiplier = gamepad1.left_trigger > 0.5 ? 0.25 : 1.0;
 
             double y = -gamepad1.left_stick_y * speedMultiplier;
             double x = gamepad1.left_stick_x * 1.1 * speedMultiplier;
             double rx = -gamepad1.right_stick_x * speedMultiplier;
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double fL_Motor = (y + x + rx) / denominator;
-            double bL_Motor = (y - x + rx) / denominator;
-            double fR_Motor = (y - x - rx) / denominator;
-            double bR_Motor = (y + x - rx) / denominator;
 
-            frontLeft.setPower(fL_Motor);
-            backLeft.setPower(bL_Motor);
-            frontRight.setPower(fR_Motor);
-            backRight.setPower(bR_Motor);
+            frontLeft.setPower((y + x + rx) / denominator);
+            backLeft.setPower((y - x + rx) / denominator);
+            frontRight.setPower((y - x - rx) / denominator);
+            backRight.setPower((y + x - rx) / denominator);
 
             if (gamepad2.right_bumper) {
                 linearMotor.setPower(-0.4);
@@ -98,21 +78,12 @@ public class Blue extends LinearOpMode {
             }
 
             if (gamepad2.y) {
-                if (rampUp) {
-                    boxServo.setPosition(0.7);
-                    rampUp = false;
-                } else {
-                    boxServo.setPosition(0.2);
-                    rampUp = true;
-                }
+                boxServo.setPosition(rampUp ? 0.7 : 0.2);
+                rampUp = !rampUp;
             }
-            while (gamepad2.y) {
-                idle();
-            }
+            while (gamepad2.y) idle();
 
-            if (gamepad2.x) {
-                boxServo.setPosition(0.87);
-            }
+            if (gamepad2.x) boxServo.setPosition(0.87);
 
             if (gamepad2.dpad_up) {
                 intakeMotor.setPower(1);
@@ -149,37 +120,38 @@ public class Blue extends LinearOpMode {
             int green2 = colorSensor2.green();
 
             String detectedColor = "UNKNOWN";
-            if (blue > green && blue > red) {
+            if (red > green && red > blue) {
                 detectedColor = "RED";
-            } else if (red > blue && red > green) {
+            } else if (blue > red && blue > green) {
                 detectedColor = "BLUE";
             } else if (green > blue && red > blue && green > 650) {
                 detectedColor = "YELLOW";
             }
 
             String detectedColor2 = "UNKNOWN";
-            if (blue2 > green2 && blue2 > red2) {
+            if (red2 > green2 && red2 > blue2) {
                 detectedColor2 = "RED";
-            } else if (red2 > blue2 && red2 > green2) {
+            } else if (blue2 > red2 && blue2 > green2) {
                 detectedColor2 = "BLUE";
             } else if (green2 > blue2 && red2 > blue2 && green2 > 650) {
                 detectedColor2 = "YELLOW";
             }
 
+
             if (gamepad2.left_stick_y > 0.0) {
-                if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
-                    leftWheelServo.setPosition(0.45);
-                    rightWheelServo.setPosition(0.55);
-                } else if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
+                if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("BLUE")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
+                    leftWheelServo.setPosition(0.48);
+                    rightWheelServo.setPosition(0.52);
+                } else if (detectedColor.equals("YELLOW") || detectedColor.equals("BLUE")) {
                     leftWheelServo.setPosition(0.5);
                     rightWheelServo.setPosition(0.5);
-                } else if (detectedColor.equals("BLUE") || detectedColor.equals("UNKNOWN")) {
+                } else if (detectedColor.equals("RED") || detectedColor.equals("UNKNOWN")) {
                     leftWheelServo.setPosition(0.0);
                     rightWheelServo.setPosition(1.0);
                 }
             } else if (gamepad2.left_stick_y < 0.0) {
-                leftWheelServo.setPosition(1.0);
-                rightWheelServo.setPosition(0.0);
+                leftWheelServo.setPosition(Math.abs(gamepad2.left_stick_y) / 2);
+                rightWheelServo.setPosition(Math.abs(gamepad2.left_stick_y) / 2 + 0.5);
             } else {
                 leftWheelServo.setPosition(0.5);
                 rightWheelServo.setPosition(0.5);
@@ -200,6 +172,7 @@ public class Blue extends LinearOpMode {
             telemetry.addData("Green2", green2);
             telemetry.addData("detectedColor2", detectedColor2);
             telemetry.update();
+
             sleep(20);
             idle();
         }

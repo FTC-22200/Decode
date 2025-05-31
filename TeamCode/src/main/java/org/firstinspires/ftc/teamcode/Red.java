@@ -67,7 +67,7 @@ public class Red extends LinearOpMode {
         int End = Start + delta;
         Start = Start + 100;
         double maxSafeTemperature = 75.0; // Define a maximum safe temperature
-        double forWheel = 0;
+        // double forWheel = 0;
 
         // Define class members
         double position1 = 1;
@@ -181,8 +181,8 @@ public class Red extends LinearOpMode {
 
             if (gamepad2.left_stick_y > 0.0) {
                 if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
-                    leftWheelServo.setPosition(0.45);
-                    rightWheelServo.setPosition(0.55);
+                    leftWheelServo.setPosition(0.48);
+                    rightWheelServo.setPosition(0.52);
                 } else if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
                     leftWheelServo.setPosition(0.5);
                     rightWheelServo.setPosition(0.5);
@@ -190,21 +190,7 @@ public class Red extends LinearOpMode {
                     leftWheelServo.setPosition(0.0);
                     rightWheelServo.setPosition(1.0);
                 }
-            //} else if (gamepad2.left_stick_y > 0.0 && detectedColor.equals("YELLOW") || gamepad2.left_stick_y > 0.0 && detectedColor.equals("RED")) {
-                // if (forWheel == 0.0) {
-                //    forWheel = 1.0;
-                //} else if (forWheel > 0.5 && forWheel < 1.0) {
-                //    forWheel -= 0.1;
-                //} else {
-                //    forWheel = 0.5;
-                //}
-                //if (forWheel == 0.5) {
-                //    leftWheelServo.setPosition(0.5); // Stop
-                //    rightWheelServo.setPosition(0.5);
-                //} else {
-                //    leftWheelServo.setPosition(0.65); // Slow pull in
-                //    rightWheelServo.setPosition(0.35);
-                //}
+
             } else if (gamepad2.left_stick_y < 0.0) {
                 leftWheelServo.setPosition(1.0); // Full forward
                 rightWheelServo.setPosition(0.0);
