@@ -140,12 +140,12 @@ public class Blue extends LinearOpMode {
 
             if (gamepad2.left_stick_y > 0.0) {
                 if (detectedColor.equals("RED") || detectedColor.equals("UNKNOWN")) {
-                    leftWheelServo.setPosition(0.35);
-                    rightWheelServo.setPosition(0.65);
+                    leftWheelServo.setPosition(0.0);
+                    rightWheelServo.setPosition(1.0);
                 }
                 if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("BLUE")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
-                    leftWheelServo.setPosition(0.499999999);
-                    rightWheelServo.setPosition(0.500000001);
+                    leftWheelServo.setPosition(0.45);
+                    rightWheelServo.setPosition(0.55);
                 }
                 if (detectedColor.equals("YELLOW") || detectedColor.equals("BLUE")) {
                     for(int ant = 0; ant<=1;ant++) {

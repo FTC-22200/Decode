@@ -181,29 +181,14 @@ public class Red extends LinearOpMode {
 
             if (gamepad2.left_stick_y > 0.0) {
                 if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
-                    leftWheelServo.setPosition(0.48);
-                    rightWheelServo.setPosition(0.52);
+                    leftWheelServo.setPosition(0.45);
+                    rightWheelServo.setPosition(0.55);
                 } else if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
                     leftWheelServo.setPosition(0.5);
                     rightWheelServo.setPosition(0.5);
                 } else if (detectedColor.equals("BLUE") || detectedColor.equals("UNKNOWN")) {
                     leftWheelServo.setPosition(0.0);
                     rightWheelServo.setPosition(1.0);
-                }
-                if (detectedColor.equals("BLUE") || detectedColor.equals("UNKNOWN")) {
-                    leftWheelServo.setPosition(0.35);
-                    rightWheelServo.setPosition(0.65);
-                }
-                if ((detectedColor2.equals("YELLOW") || detectedColor2.equals("RED")) && !detectedColor.equals("YELLOW") && !detectedColor.equals("RED")) {
-                    leftWheelServo.setPosition(0.499999999);
-                    rightWheelServo.setPosition(0.500000001);
-                }
-                if (detectedColor.equals("YELLOW") || detectedColor.equals("RED")) {
-                    for(int ant = 0; ant<=1;ant++) {
-                        leftWheelServo.setPosition(0.5);
-                        rightWheelServo.setPosition(0.5);
-                        break;
-                    }
                 }
             } else if (gamepad2.left_stick_y < 0.0) {
                 leftWheelServo.setPosition(Math.abs(gamepad2.left_stick_y)/2 + 0.5);
