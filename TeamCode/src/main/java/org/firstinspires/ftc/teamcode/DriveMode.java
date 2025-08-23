@@ -72,7 +72,7 @@ public class DriveMode extends LinearOpMode {
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            // Linear motor control
+            /* Linear motor control
             if (gamepad2.right_bumper) {
                 linearMotor.setPower(-0.4); // Reverse if right bumper pressed
             } else if (gamepad2.right_trigger > 0) {
@@ -147,7 +147,7 @@ public class DriveMode extends LinearOpMode {
             telemetry.addData("Box Down", boxDown);
             telemetry.addData("Box Up", boxUp);
             telemetry.addData("Ramp Up", rampUp);
-
+            */
             telemetry.update();
             sleep(CYCLE_MS);
             idle();
