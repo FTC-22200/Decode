@@ -19,6 +19,7 @@ public class StarterBotTest extends OpMode {
 
     double leftPower;
     double rightPower;
+    double power;
 
     @Override
     public void init() {
@@ -42,20 +43,13 @@ public class StarterBotTest extends OpMode {
 
         leftFeeder.setPower(STOP_SPEED);
 
-        @Override
         rightFeeder.setPower(STOP_SPEED);
 
         telemetry.addData("Status", "Initialized");
     }
     public void loop() {
         arcadeDrive(-gamepad1.right_stick_x, -gamepad1.left_stick_y);
-
-        // Manual launcher control with velocity
-        if (gamepad2.y) {
-            launcher.setPower(0.75);
-        } else if (gamepad2.b) {
-            launcher.setPower(0);
-        }
+        launch(-gamepad2.left_stick_y);
 
         // Manual feeder control
         if (gamepad2.a) {
@@ -79,14 +73,15 @@ public class StarterBotTest extends OpMode {
         rightPower = forward + rotate;
         leftPower = forward - rotate;
 
-        if (gamepad1.left_bumper) {
-            leftPower /= 2;
-            rightPower /= 2;
+        if (gamepad1.left_trigger > 0.5) {
+            leftDrive.setPower(leftPower*0.25);
+            rightDrive.setPower(rightPower*0.25);
         } else {
             leftDrive.setPower(leftPower);
             rightDrive.setPower(rightPower);
         }
-
-
+    }
+    void launch(double power) {
+        launcher.setPower(power);
     }
 }
