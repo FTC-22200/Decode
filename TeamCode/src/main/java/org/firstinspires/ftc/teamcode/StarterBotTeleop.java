@@ -50,12 +50,12 @@ public class StarterBotTest extends OpMode {
         telemetry.addData("Status", "Initialized");
     }
 
-    void juggle(){
+    public void isJuggling() {
         // Set the launcher to low power for juggling
-        launcher.setPower(0.25);
+        launcher.setPower(0.3);
         // Servo speed decrease for juggling
-        leftFeeder.setPower(0.4);
-        rightFeeder.setPower(0.4);
+        leftFeeder.setPower(0.25);
+        rightFeeder.setPower(0.25);
     }
 
     public void loop() {
@@ -63,7 +63,7 @@ public class StarterBotTest extends OpMode {
         isJuggling = gamepad2.b;
 
         if (isJuggling){
-            juggle(); // New activation for juggling
+            isJuggling(); // New activation for juggling
         } else {
             launch(-gamepad2.left_stick_y); // Regular launching
         }
@@ -94,6 +94,7 @@ public class StarterBotTest extends OpMode {
         telemetry.addData("Launcher Velocity", launcher.getVelocity());
         telemetry.addData("Left Feeder Power", leftFeeder.getPower());
         telemetry.addData("Right Feeder Power", rightFeeder.getPower());
+        telemetry.addData("Juggling Mode", isJuggling ? "Active" : "Inactive");
     }
 
     void arcadeDrive(double forward, double rotate) {
