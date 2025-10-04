@@ -54,14 +54,14 @@ public class StarterBotTeleop extends OpMode {
         arcadeDrive(-gamepad1.right_stick_x, -gamepad1.left_stick_y);
         launch(-gamepad2.left_stick_y);
 
-        while (gamepad2.b) {
+        // Reverse Control
+        if (gamepad2.b) {
             leftFeeder.setPower(-1.0);
             rightFeeder.setPower(-1.0);
             launcher.setPower(-1.0);
         }
-
         // Manual feeder control
-        if (gamepad2.a) {
+        else if (gamepad2.a) {
             leftFeeder.setPower(1.0);
             rightFeeder.setPower(1.0);
         } else if (gamepad2.x) {
