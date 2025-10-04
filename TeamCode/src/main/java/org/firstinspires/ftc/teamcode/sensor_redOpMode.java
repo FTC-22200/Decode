@@ -18,7 +18,7 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
 
 @TeleOp
-public class red extends LinearOpMode {
+public class sensor_redOpMode extends LinearOpMode {
     @SuppressLint("DefaultLocale")
     @Override
     public void runOpMode() {

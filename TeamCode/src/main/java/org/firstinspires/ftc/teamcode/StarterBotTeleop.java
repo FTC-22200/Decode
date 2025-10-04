@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name = "StarterBotTeleop", group = "StarterBot")
-public class StarterBotTest extends OpMode {
+public class StarterBotTeleop extends OpMode {
     final double STOP_SPEED = 0.0;
     final double REQUIRED_LAUNCHER_VELOCITY = 1000.0;
 
@@ -50,51 +50,32 @@ public class StarterBotTest extends OpMode {
         telemetry.addData("Status", "Initialized");
     }
 
-    public void isJuggling() {
-        // Set the launcher to low power for juggling
-        launcher.setPower(0.3);
-        // Servo speed decrease for juggling
-        leftFeeder.setPower(0.25);
-        rightFeeder.setPower(0.25);
-    }
-
     public void loop() {
         arcadeDrive(-gamepad1.right_stick_x, -gamepad1.left_stick_y);
-        isJuggling = gamepad2.b;
+        launch(-gamepad2.left_stick_y);
 
-        if (isJuggling){
-            isJuggling(); // New activation for juggling
-        } else {
-            launch(-gamepad2.left_stick_y); // Regular launching
+        while (gamepad2.b) {
+            leftFeeder.setPower(-1.0);
+            rightFeeder.setPower(-1.0);
+            launcher.setPower(-1.0);
         }
 
-        double currentVelocity = launcher.getVelocity();
-
         // Manual feeder control
-        if (!isJuggling) {
-            if (currentVelocity >= REQUIRED_LAUNCHER_VELOCITY) { // NEW: Check if launcher is fast enough
-                if (gamepad2.a) {
-                    leftFeeder.setPower(1.0);
-                    rightFeeder.setPower(1.0);
-                } else if (gamepad2.x) {
-                    leftFeeder.setPower(-1.0);
-                    rightFeeder.setPower(-1.0);
-                } else {
-                    leftFeeder.setPower(0.0);
-                    rightFeeder.setPower(0.0);
-                }
-            } else {
-                leftFeeder.setPower(0.0); // NEW: Prevent feeder movement
-                rightFeeder.setPower(0.0);
-                launcher.setPower(1.0);
-            }
+        if (gamepad2.a) {
+            leftFeeder.setPower(1.0);
+            rightFeeder.setPower(1.0);
+        } else if (gamepad2.x) {
+            leftFeeder.setPower(-1.0);
+            rightFeeder.setPower(-1.0);
+        } else {
+            leftFeeder.setPower(0.0);
+            rightFeeder.setPower(0.0);
         }
 
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("Launcher Velocity", launcher.getVelocity());
         telemetry.addData("Left Feeder Power", leftFeeder.getPower());
         telemetry.addData("Right Feeder Power", rightFeeder.getPower());
-        telemetry.addData("Juggling Mode", isJuggling ? "Active" : "Inactive");
     }
 
     void arcadeDrive(double forward, double rotate) {
