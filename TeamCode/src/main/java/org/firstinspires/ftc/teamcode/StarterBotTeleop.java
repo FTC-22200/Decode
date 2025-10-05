@@ -6,11 +6,14 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "StarterBotTeleop", group = "StarterBot")
+@TeleOp(name = "StarterBotTest", group = "StarterBot")
 public class StarterBotTest extends OpMode {
     final double STOP_SPEED = 0.0;
-    final double LAUNCHER_VELOCITY_THRESHOLD = 1500.00;
+    final double LAUNCHER_VELOCITY_THRESHOLD = 1300.00;
+    double Servo_Time = 0.0;
+    boolean Servo_Turning = false;
 
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
@@ -62,17 +65,12 @@ public class StarterBotTest extends OpMode {
             launcher.setPower(-1.0);
         }
         if (launcher.getVelocity() <= LAUNCHER_VELOCITY_THRESHOLD && gamepad2.left_stick_y < 0.0) {
-            if (gamepad2.x) {
-                leftFeeder.setPower(-1.0);
-                rightFeeder.setPower(-1.0);
-            } else {
                 leftFeeder.setPower(0.0);
                 rightFeeder.setPower(0.0);
-            }
         } else {
-            if (gamepad2.a) { 
-                leftFeeder.setPower(1.0);
-                rightFeeder.setPower(1.0);
+            if (gamepad2.a && !Servo_Turning) {
+                Servo_Time = 0.0;
+                Servo_Turning = true;
             } else if (gamepad2.x) {
                 leftFeeder.setPower(-1.0);
                 rightFeeder.setPower(-1.0);
@@ -81,6 +79,16 @@ public class StarterBotTest extends OpMode {
                 rightFeeder.setPower(0.0);
             }
         }
+        if (Servo_Turning) {
+            if (Servo_Time < 5.0) {
+                leftFeeder.setPower(1.0);
+                rightFeeder.setPower(1.0);
+                Servo_Time++;
+            } else {
+                Servo_Turning = false;
+            }
+        }
+        
 
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("Launcher Velocity", launcher.getVelocity());
