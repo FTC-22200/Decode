@@ -55,8 +55,10 @@ public class StarterBotTest extends OpMode {
 
         if (gamepad2.right_bumper) {
             juggle();
+        } else if (gamepad2.y) {
+            launch();
         } else {
-            launch(-gamepad2.left_stick_y);
+            launcher.setVelocity(0.0);
         }
 
         if (gamepad2.b) {
@@ -80,7 +82,7 @@ public class StarterBotTest extends OpMode {
             }
         }
         if (Servo_Turning) {
-            if (Servo_Time < 5.0) {
+            if (Servo_Time < 8.0) {
                 leftFeeder.setPower(1.0);
                 rightFeeder.setPower(1.0);
                 Servo_Time++;
@@ -88,7 +90,7 @@ public class StarterBotTest extends OpMode {
                 Servo_Turning = false;
             }
         }
-        
+
 
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
         telemetry.addData("Launcher Velocity", launcher.getVelocity());
@@ -109,18 +111,24 @@ public class StarterBotTest extends OpMode {
             rightDrive.setPower(rightPower);
         }
     }
-    void launch(double power) {
+    void launch() {
         // Convert power to target velocity (assuming 1500 is max speed)
-        double target_velocity = power * 1500.00;
-
-        // Ensure the target velocity is within bounds
-        target_velocity = Math.max(-1500.00, Math.min(target_velocity, 1500.00));
+        double target_velocity = 1500.00;
 
         // Set the motor velocity
         launcher.setVelocity(target_velocity);
 
-        // Telemetry for debugging
-        telemetry.addData("Launch Power", power);
+        if (launcher.getVelocity() >= 1500) {
+                for (; Servo_Time < 8.0; Servo_Time++) {
+                    leftFeeder.setPower(1.0);
+                    rightFeeder.setPower(1.0);
+                    break; // Prevent locking up the loop in one cycle
+                }
+                if (Servo_Time >= 8.0) {
+                    Servo_Turning = false;
+                }
+        }
+
         telemetry.addData("Target Velocity", target_velocity);
         telemetry.addData("Current Launcher Velocity", launcher.getVelocity());
     }
