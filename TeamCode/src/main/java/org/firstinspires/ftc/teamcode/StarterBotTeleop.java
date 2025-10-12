@@ -114,19 +114,24 @@ public class StarterBotTest extends OpMode {
     void launch() {
         // Convert power to target velocity (assuming 1500 is max speed)
         double target_velocity = 1500.00;
+        if (gamepad2.dpad_up) {
+            target_velocity = 2000.00;
+        } else if (gamepad2.dpad_left){
+            target_velocity = 1000.00;
+        }
 
         // Set the motor velocity
         launcher.setVelocity(target_velocity);
-
-        if (launcher.getVelocity() >= 1500) {
-                for (; Servo_Time < 8.0; Servo_Time++) {
-                    leftFeeder.setPower(1.0);
-                    rightFeeder.setPower(1.0);
-                    break; // Prevent locking up the loop in one cycle
-                }
-                if (Servo_Time >= 8.0) {
-                    Servo_Turning = false;
-                }
+        
+        if (launcher.getVelocity() >= target_velocity - 30 && launcher.getVelocity() <= target_velocity + 30) {
+            for (; Servo_Time >= 8.0; Servo_Time++) {
+                leftFeeder.setPower(1.0);
+                rightFeeder.setPower(1.0);
+                break; // Prevent locking up the loop in one cycle
+            }
+            if (Servo_Time >= 8.0) {
+                Servo_Turning = false;
+            }
         }
 
         telemetry.addData("Target Velocity", target_velocity);
