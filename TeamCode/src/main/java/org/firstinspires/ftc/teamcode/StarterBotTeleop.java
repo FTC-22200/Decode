@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "StarterBotTest", group = "StarterBot")
-public class StarterBotTest extends OpMode {
+public class StarterBotTeleop extends OpMode {
     final double STOP_SPEED = 0.0;
     final double LAUNCHER_VELOCITY_THRESHOLD = 1300.00;
     double Servo_Time = 0.0;
@@ -115,23 +115,17 @@ public class StarterBotTest extends OpMode {
         // Convert power to target velocity (assuming 1500 is max speed)
         double target_velocity = 1500.00;
         if (gamepad2.dpad_up) {
-            target_velocity = 2000.00;
-        } else if (gamepad2.dpad_left){
-            target_velocity = 1000.00;
+            target_velocity = 2000.0;
+        } else if (gamepad2.dpad_left) {
+            target_velocity = 1000.0;
         }
 
         // Set the motor velocity
         launcher.setVelocity(target_velocity);
-        
-        if (launcher.getVelocity() >= target_velocity - 30 && launcher.getVelocity() <= target_velocity + 30) {
-            for (; Servo_Time >= 8.0; Servo_Time++) {
-                leftFeeder.setPower(1.0);
-                rightFeeder.setPower(1.0);
-                break; // Prevent locking up the loop in one cycle
-            }
-            if (Servo_Time >= 8.0) {
-                Servo_Turning = false;
-            }
+
+        if (launcher.getVelocity() >= 1500) {
+            leftFeeder.setPower(1.0);
+            rightFeeder.setPower(1.0);
         }
 
         telemetry.addData("Target Velocity", target_velocity);

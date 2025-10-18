@@ -16,7 +16,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotor backLeft = hardwareMap.dcMotor.get("backLeft");
         DcMotor frontRight = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRight = hardwareMap.dcMotor.get("backRight");
-        DcMotor intakeMotor = hardwareMap.dcMotor.get(intakeMotor);
+        DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
 
         // Servo config
 
@@ -24,7 +24,7 @@ public class DecodeDriveMode extends LinearOpMode {
         backLeft.setDirection(DcMotor.Direction.FORWARD);
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
-        intakeMotor.setDirection(DcMotor.Direction.FOWARD);
+        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
 
         final int CYCLE_MS = 50;
 
