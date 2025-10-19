@@ -115,9 +115,9 @@ public class StarterBotTeleop extends OpMode {
         // Convert power to target velocity (assuming 1500 is max speed)
         double target_velocity = 1500.00;
         if (gamepad2.dpad_up) {
-            target_velocity = 2000.0;
+            target_velocity = 2000.0; // Set velocity to certain controls
         } else if (gamepad2.dpad_left) {
-            target_velocity = 1000.0;
+            target_velocity = 1000.0; // Set velocity to certain controls
         }
 
         // Set the motor velocity
