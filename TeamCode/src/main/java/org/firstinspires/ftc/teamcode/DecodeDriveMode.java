@@ -38,8 +38,19 @@ public class DecodeDriveMode extends LinearOpMode {
             if (gamepad1.left_trigger > 0.5) {
                 speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
             }
-            double y = -gamepad1.left_stick_y * speedMultiplier; // For forwards/backwards movement
-            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier; // The 1.1 multiplier is to counteract imperfect strafing
+            if (gamepad1.left_bumper) {
+                frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            } else {
+                frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            }
+            double y = gamepad1.left_stick_y * speedMultiplier; // For forwards/backwards movement
+            double x = -gamepad1.left_stick_x * 1.1 * speedMultiplier; // The 1.1 multiplier is to counteract imperfect strafing
             double rx = -gamepad1.right_stick_x * speedMultiplier; // Turning left/right
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
             double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
@@ -52,8 +63,6 @@ public class DecodeDriveMode extends LinearOpMode {
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            // Linear motor control
-
             // Run intakeMotor
             if (gamepad2.right_stick_y < 0.0) {
                 intakeMotor.setPower(gamepad2.right_stick_y);
@@ -62,12 +71,13 @@ public class DecodeDriveMode extends LinearOpMode {
             } else {
                 intakeMotor.setPower(0.0);
             }
-            
+
+            // Linear motor control
+
                 telemetry.update();
                 sleep(CYCLE_MS);
                 idle();
             }
         }
     }
-
 
