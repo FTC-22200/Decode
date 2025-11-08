@@ -16,17 +16,17 @@ public class LimelightData extends OpMode {
 
     private Limelight3A limelight;
     private IMU imu;
-    private double distance;
 
     @Override
     public void init() {
         telemetry.addLine("Initializing...");
         telemetry.update();
 
-        // Initialize Limelight and IMU
+        // Initialize Limelight and switch to AprilTag pipeline
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(8); // Switch to AprilTag pipeline
+        limelight.pipelineSwitch(8); // Ensure pipeline 8 is configured for AprilTags
 
+        // Initialize IMU with correct orientation
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
@@ -45,24 +45,29 @@ public class LimelightData extends OpMode {
 
     @Override
     public void loop() {
+        // Update Limelight with current robot yaw
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
+        limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
 
+        // Get latest Limelight result
         LLResult llResult = limelight.getLatestResult();
 
-        if (llResult != null && llResult.isValid()) {
-            Pose3D botPose = llResult.getBotpose();
+        // Check if result is valid and recent
+        boolean isValid = llResult != null && llResult.isValid();
 
-            telemetry.addData("Target Valid", true);
+        // Adding telemetry data if target available
+        telemetry.addData("Target Valid", isValid);
+
+        if (isValid) {
+            Pose3D botPose = llResult.getBotpose();
+            // Telemetry Data
             telemetry.addData("Tx (Horizontal Offset)", llResult.getTx());
             telemetry.addData("Ty (Vertical Offset)", llResult.getTy());
             telemetry.addData("Ta (Target Area)", llResult.getTa());
             telemetry.addData("Bot Pose", botPose.toString());
         } else {
-            telemetry.addData("Target Valid", false);
             telemetry.addLine("No valid AprilTag detected.");
         }
-
         telemetry.update();
     }
 }
