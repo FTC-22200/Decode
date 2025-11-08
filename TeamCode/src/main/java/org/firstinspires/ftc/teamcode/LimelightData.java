@@ -16,7 +16,6 @@ public class LimelightData extends OpMode {
 
     private Limelight3A limelight;
     private IMU imu;
-
     // private double distance;
 
     @Override
