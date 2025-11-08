@@ -17,6 +17,8 @@ public class LimelightData extends OpMode {
     private Limelight3A limelight;
     private IMU imu;
 
+    // private double distance;
+
     @Override
     public void init() {
         telemetry.addLine("Initializing...");
@@ -61,6 +63,8 @@ public class LimelightData extends OpMode {
         if (isValid) {
             Pose3D botPose = llResult.getBotpose();
             // Telemetry Data
+            // distance = getDistanceFromTag(llResult.getTa());
+            // telemetry.addData("Distance from Tag", distance);
             telemetry.addData("Tx (Horizontal Offset)", llResult.getTx());
             telemetry.addData("Ty (Vertical Offset)", llResult.getTy());
             telemetry.addData("Ta (Target Area)", llResult.getTa());
@@ -70,4 +74,10 @@ public class LimelightData extends OpMode {
         }
         telemetry.update();
     }
+
+    //    public double getDistanceFromTag(double ta) {
+    //        double scale = 5;
+    //        distance = (scale / ta);
+    //        return distance;
+    //    }
 }
