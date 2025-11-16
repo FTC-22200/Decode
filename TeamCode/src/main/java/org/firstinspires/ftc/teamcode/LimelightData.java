@@ -61,9 +61,10 @@ public class LimelightData extends OpMode {
 
         if (isValid) {
             Pose3D botPose = llResult.getBotpose();
+            double ta = llResult.getTa();
+            double estimatedDistance = getDistanceFromTag(ta);
             // Telemetry Data - Distance
-            distance = getDistanceFromTag(llResult.getTa());
-            telemetry.addData("Calculated Distance from Tag", distance);
+            telemetry.addData("Distance from BotPose (cm) - Second one", estimatedDistance);
             // Telemetry Data - Everything Else
             telemetry.addData("Tx (Horizontal Offset)", llResult.getTx());
             telemetry.addData("Ty (Vertical Offset)", llResult.getTy());
@@ -76,8 +77,9 @@ public class LimelightData extends OpMode {
     }
 
     public double getDistanceFromTag(double ta) {
-        double scale = 3912.735;
-        distance = (scale / ta);
-        return distance;
+        if (ta <= 0) return -1;
+        double a = 150.0;
+        double b = -0.65;
+        return a * Math.pow(ta, b); // distance returned in cm
     }
 }
