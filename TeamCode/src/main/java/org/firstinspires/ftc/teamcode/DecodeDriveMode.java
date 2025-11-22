@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @TeleOp
 public class DecodeDriveMode extends LinearOpMode {
     double launcher_power = 1.0;
-
+    double launcher_velocity = 3000.0;
     private DcMotor intakeMotor;
-    private DcMotor launcher;
+    private DcMotorEx launcher;
 
     @Override
     public void runOpMode() {
@@ -22,7 +22,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        launcher = hardwareMap.dcMotor.get("launcherMotor");
+        DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
 
         // Motor directions
         frontLeft.setDirection(DcMotorEx.Direction.FORWARD);
@@ -30,7 +30,7 @@ public class DecodeDriveMode extends LinearOpMode {
         frontRight.setDirection(DcMotorEx.Direction.REVERSE);
         backRight.setDirection(DcMotorEx.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-        launcher.setDirection(DcMotor.Direction.FORWARD);
+        launcher.setDirection(DcMotorEx.Direction.FORWARD);
 
         final int CYCLE_MS = 50;
 
@@ -46,7 +46,7 @@ public class DecodeDriveMode extends LinearOpMode {
 
             double speedMultiplier = 1.0;
             if (gamepad1.left_trigger > 0.5) {
-                speedMultiplier *= 0.25;
+                speedMultiplier *= 0.4; // Original - prev was 0.5
             }
 
             if (gamepad1.left_bumper) {
@@ -67,6 +67,11 @@ public class DecodeDriveMode extends LinearOpMode {
             double rx = -gamepad1.right_stick_x * speedMultiplier;
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
 
+            // To decrease 'noise' via small movements
+            if (Math.abs(x) < 0.05) x = 0;
+            if (Math.abs(y) < 0.05) y= 0;
+            if (Math.abs(rx) < 0.05) rx = 0;
+
             double fL_Motor = (y + x + rx) / denominator;
             double bL_Motor = (y - x + rx) / denominator;
             double fR_Motor = (y - x - rx) / denominator;
@@ -77,16 +82,24 @@ public class DecodeDriveMode extends LinearOpMode {
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            frontLeft.setVelocity(fL_Motor * 3000.0);
-            backLeft.setVelocity(bL_Motor * 3000.0);
-            frontRight.setVelocity(fR_Motor * 3000.0);
-            backRight.setVelocity(bR_Motor * 3000.0);
+            // Removal of velocity because it overrides setPower()
+
+            // frontLeft.setVelocity(fL_Motor * 3000.0);
+            // backLeft.setVelocity(bL_Motor * 3000.0);
+            // frontRight.setVelocity(fR_Motor * 3000.0);
+            // backRight.setVelocity(bR_Motor * 3000.0);
 
             // Intake motor control
             if (gamepad2.right_stick_y != 0.0) {
                 intakeMotor.setPower(gamepad2.right_stick_y);
             } else {
                 intakeMotor.setPower(0.0);
+            }
+
+            if (gamepad2.left_stick_y > 0.0) {
+                launcher_velocity += 100;
+            } else if (gamepad2.left_stick_y < 0.0) {
+                launcher_velocity -= 100;
             }
 
             telemetry.update();
@@ -96,15 +109,15 @@ public class DecodeDriveMode extends LinearOpMode {
     }
 
     private void launch() {
-        if (gamepad2.dpad_up) {
-            launcher_power = 0.9;
-        } else if (gamepad2.dpad_left) {
-            launcher_power = 0.75;
-        } else if (gamepad2.dpad_right) {
-            launcher_power = 0.6;
-        } else if (gamepad2.dpad_down) {
-            launcher_power = 0.4;
+        if (gamepad2.dpad_up) { // high
+            launcher_velocity = 2700.0;
+        } else if (gamepad2.dpad_left) { // medium
+            launcher_velocity = 2400.0;
+        } else if (gamepad2.dpad_right) { // low-mid (new)
+            launcher_velocity = 1800.0;
+        } else if (gamepad2.dpad_down) { // low
+            launcher_velocity = 1200.0 ;
         }
-        launcher.setPower(launcher_power);
+        launcher.setVelocity(launcher_velocity);
     }
 }
