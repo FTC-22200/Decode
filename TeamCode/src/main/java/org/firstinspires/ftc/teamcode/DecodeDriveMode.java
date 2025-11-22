@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp
 public class DecodeDriveMode extends LinearOpMode {
+    double launcher_power = 1.0;
 
     private DcMotor intakeMotor;
     private DcMotor launcher;
@@ -37,7 +38,11 @@ public class DecodeDriveMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            launch(-gamepad2.left_stick_y);
+            if (gamepad2.y) {
+                launch();
+            } else {
+                launcher.setPower(0.0);
+            }
 
             double speedMultiplier = 1.0;
             if (gamepad1.left_trigger > 0.5) {
@@ -57,8 +62,8 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             // Drive calculations
-            double y = gamepad1.left_stick_y * speedMultiplier;
-            double x = -gamepad1.left_stick_x * 1.1 * speedMultiplier;
+            double y = -gamepad1.left_stick_y * speedMultiplier;
+            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier;
             double rx = -gamepad1.right_stick_x * speedMultiplier;
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
 
@@ -90,7 +95,16 @@ public class DecodeDriveMode extends LinearOpMode {
         }
     }
 
-    private void launch(double power) {
-        launcher.setPower(power);
+    private void launch() {
+        if (gamepad2.dpad_up) {
+            launcher_power = 0.9;
+        } else if (gamepad2.dpad_left) {
+            launcher_power = 0.75;
+        } else if (gamepad2.dpad_right) {
+            launcher_power = 0.6;
+        } else if (gamepad2.dpad_down) {
+            launcher_power = 0.4;
+        }
+        launcher.setPower(launcher_power);
     }
 }
