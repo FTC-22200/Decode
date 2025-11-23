@@ -7,7 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.SerialNumber;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
 
 @TeleOp
 public class DecodeDriveMode extends LinearOpMode {
@@ -15,7 +16,6 @@ public class DecodeDriveMode extends LinearOpMode {
     double launcher_velocity = 3000.0;
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
-    private CRServo boxServo = null;
 
     @Override
     public void runOpMode() {
@@ -26,6 +26,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
+        CRServo boxServo = hardwareMap.get(CRServo.class, "boxServo");
         DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
 
         // Motor directions
@@ -93,26 +94,27 @@ public class DecodeDriveMode extends LinearOpMode {
                 intakeMotor.setPower(0.0);
             }
 
+            // Box servo to push the ball into the box
+            if (gamepad2.a && launcher.getVelocity() >= launcher_velocity) {
+                boxServo.setPower(-0.4);
+            } else {
+                boxServo.setPower(0.0);
+            }
+
+            //Incremental velocity power
             if (gamepad2.left_stick_y > 0.0) {
                 launcher_velocity += 100;
             } else if (gamepad2.left_stick_y < 0.0) {
                 launcher_velocity -= 100;
             }
 
-            // Box servo - push ball to box
-            if (gamepad2.a) {
-                boxServo.setPower(-0.4);
-            } else {
-                boxServo.setPower(0.0);
-            }
 
             telemetry.update();
-            telemetry.addData("Launcher Velocity : ", launcher_velocity);
+            telemetry.addData("Launcher velocity : ", launcher_velocity);
             sleep(CYCLE_MS);
             idle();
         }
     }
-
     private void launch() {
         if (gamepad2.dpad_up) { // high
             launcher_velocity = 2700.0;
