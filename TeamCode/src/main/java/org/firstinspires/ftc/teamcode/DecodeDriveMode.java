@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -17,10 +18,12 @@ public class DecodeDriveMode extends LinearOpMode {
     boolean boxServoUp = false;
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
+    private Servo rgbLight;
+
 
     @Override
     public void runOpMode() {
-
+        ColorSensor colorSensor;
         // Motor config
         DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
         DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
@@ -29,6 +32,8 @@ public class DecodeDriveMode extends LinearOpMode {
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        colorSensor = hardwareMap.get(ColorSensor.class, "Color Sensor");
+        rgbLight = hardwareMap.get(Servo.class, "RGB Light");
 
         // Motor directions
         frontLeft.setDirection(DcMotorEx.Direction.FORWARD);
