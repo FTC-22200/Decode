@@ -9,17 +9,17 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @TeleOp
 public class DecodeDriveMode extends LinearOpMode {
-    double launcher_power = 1.0;
     double launcher_velocity = 3000.0;
     boolean boxServoUp = false;
+    private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
-    private Servo rgbLight;
-
+    Servo rgbLight;
 
     @Override
     public void runOpMode() {
@@ -49,7 +49,15 @@ public class DecodeDriveMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            if (gamepad2.y) {
+            // Color declaration
+            int red = colorSensor.red();
+            int blue = colorSensor.blue();
+            int green = colorSensor.green();
+            int purple = colorSensor.red() + colorSensor.blue();
+            telemetry.addData("Green", green);
+            telemetry.addData("Purple", purple);
+
+            if (gamepad2.right_trigger > 0) {
                 launch();
             } else {
                 launcher.setPower(0.0);
@@ -58,9 +66,6 @@ public class DecodeDriveMode extends LinearOpMode {
             double speedMultiplier = 1.0;
             if (gamepad1.left_trigger > 0.5) {
                 speedMultiplier *= 0.4; // Original - prev was 0.5
-            }
-
-            if (gamepad1.left_bumper) {
                 frontLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
                 frontRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
                 backLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
@@ -101,12 +106,26 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             // Box servo to push the ball into the box
-            if (gamepad2.a && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
+            if (gamepad2.y && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
                 boxServo.setPosition(0.6);
                 boxServoUp = true;
-            } else if (gamepad2.a && boxServoUp){
+                boxServoTimer.reset();
+            }
+            // Timer
+            if (boxServoUp && boxServoTimer.seconds() > 0.75) {
                 boxServo.setPosition(0.85);
                 boxServoUp = false;
+            }
+
+            // Color conditions and led lightup
+            if (green > red && green > blue) {
+                telemetry.update();
+                telemetry.addData("Color: ", "GREEN");
+                rgbLight.setPosition(0.25);
+            } else if (red > green && blue > green && Math.abs(red - blue) < 50) {
+                telemetry.update();
+                telemetry.addData("Color: ", "PURPLE");
+                rgbLight.setPosition(0.75);
             }
 
             //Incremental velocity power
@@ -116,9 +135,10 @@ public class DecodeDriveMode extends LinearOpMode {
                 launcher_velocity -= 100;
             }
 
-
             telemetry.update();
-            telemetry.addData("Launcher velocity : ", launcher_velocity);
+            telemetry.addData("Launcher target velocity : ", launcher_velocity);
+            telemetry.addData("Acc target velocity: ", launcher.getVelocity());
+            telemetry.addData("aiden sucks", " :(");
             sleep(CYCLE_MS);
             idle();
         }
