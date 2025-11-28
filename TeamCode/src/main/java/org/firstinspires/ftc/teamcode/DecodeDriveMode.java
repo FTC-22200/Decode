@@ -28,7 +28,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
-        DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
 
         // Motor directions
         frontLeft.setDirection(DcMotorEx.Direction.FORWARD);
@@ -100,7 +100,7 @@ public class DecodeDriveMode extends LinearOpMode {
                 boxServo.setPosition(0.6);
                 boxServoUp = true;
             } else if (gamepad2.a && boxServoUp){
-                boxServo.setPosition(0.8);
+                boxServo.setPosition(0.85);
                 boxServoUp = false;
             }
 
@@ -118,7 +118,7 @@ public class DecodeDriveMode extends LinearOpMode {
             idle();
         }
     }
-    private void launch() {
+    public void launch() { // changed from private
         if (gamepad2.dpad_up) { // high
             launcher_velocity = 2700.0;
         } else if (gamepad2.dpad_left) { // medium
