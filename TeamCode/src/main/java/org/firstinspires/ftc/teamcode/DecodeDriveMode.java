@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class DecodeDriveMode extends LinearOpMode {
     double launcher_power = 1.0;
     double launcher_velocity = 3000.0;
+    boolean boxServoUp = false;
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
 
@@ -95,10 +96,12 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             // Box servo to push the ball into the box
-            if (gamepad2.a && launcher.getVelocity() >= launcher_velocity) {
-                boxServo.setPower(-0.4);
-            } else {
-                boxServo.setPower(0.0);
+            if (gamepad2.a && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
+                boxServo.setPower(0.6);
+                boxServoUp = true;
+            } else if (gamepad2.a && boxServoUp){
+                boxServo.setPower(0.8);
+                boxServoUp = false;
             }
 
             //Incremental velocity power
