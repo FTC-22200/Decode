@@ -73,7 +73,7 @@ public class DecodeAutoRedBack extends OpMode
         frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
         boxServo = hardwareMap.get(Servo.class, "boxServo");
 
         // Motor directions

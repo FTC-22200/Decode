@@ -73,7 +73,7 @@ public class DecodeAutoBlueFront extends OpMode
         frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
         boxServo = hardwareMap.get(Servo.class, "boxServo");
 
         // Motor directions
@@ -99,8 +99,8 @@ public class DecodeAutoBlueFront extends OpMode
         intakeMotor.setZeroPowerBehavior(BRAKE);
         launcher.setZeroPowerBehavior(BRAKE);
 
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(300,0,0,10));
+        launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(300,0,0,10));
 
         telemetry.addData("Auto Initalization Complete", "Initialized");
         telemetry.addData("aiden sucks", "");
