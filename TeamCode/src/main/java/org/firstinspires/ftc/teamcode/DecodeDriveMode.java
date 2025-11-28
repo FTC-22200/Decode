@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
+// import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+
 
 
 @TeleOp
@@ -117,15 +119,25 @@ public class DecodeDriveMode extends LinearOpMode {
                 boxServoUp = false;
             }
 
+            String detectedColor;
             // Color conditions and led lightup
             if (green > red && green > blue) {
-                telemetry.update();
-                telemetry.addData("Color: ", "GREEN");
-                rgbLight.setPosition(0.25);
+                detectedColor = "GREEN";
+                rgbLight.setPosition(0.500);
             } else if (red > green && blue > green && Math.abs(red - blue) < 50) {
-                telemetry.update();
-                telemetry.addData("Color: ", "PURPLE");
-                rgbLight.setPosition(0.75);
+                detectedColor = "PURPLE";
+                rgbLight.setPosition(0.7222);
+            } else {
+                rgbLight.setPosition(1.0);
+                detectedColor = "NULL";
+            }
+
+            if (detectedColor.equals("GREEN")) {
+                rgbLight.setPosition(0.500);
+            } else if (detectedColor.equals("PURPLE")) {
+                rgbLight.setPosition(0.7222);
+            } else {
+                rgbLight.setPosition(1.0);
             }
 
             //Incremental velocity power
@@ -138,7 +150,6 @@ public class DecodeDriveMode extends LinearOpMode {
             telemetry.update();
             telemetry.addData("Launcher target velocity : ", launcher_velocity);
             telemetry.addData("Acc target velocity: ", launcher.getVelocity());
-            telemetry.addData("aiden sucks", " :(");
             sleep(CYCLE_MS);
             idle();
         }
