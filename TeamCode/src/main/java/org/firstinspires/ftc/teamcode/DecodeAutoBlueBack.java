@@ -85,8 +85,8 @@ public class DecodeAutoBlueBack extends OpMode
         launcher.setDirection(DcMotorEx.Direction.FORWARD);
 
 
-        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         intakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -155,10 +155,10 @@ public class DecodeAutoBlueBack extends OpMode
                     if(shotsToFire > 0) {
                         autonomousState = AutonomousState.LAUNCH;
                     } else {
-                        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                        frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                        backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                        backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                         launcher.setVelocity(0);
                         robotRotationAngle = 0.0;
                         autonomousState = AutonomousState.ROTATING;
@@ -173,10 +173,10 @@ public class DecodeAutoBlueBack extends OpMode
                  * Once the function returns "true" we reset the encoders again and move on.
                  */
                 if(drive(DRIVE_SPEED, 6, DistanceUnit.INCH, 1)){
-                    frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
@@ -185,10 +185,10 @@ public class DecodeAutoBlueBack extends OpMode
                 // robotRotationAngle = 35;
 
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
-                    frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                     if (robotRotationAngle == 0.0) {
                         if (driveOffLine) {
                             autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
@@ -256,10 +256,10 @@ public class DecodeAutoBlueBack extends OpMode
         frontRight.setTargetPosition((int) targetPosition);
         backRight.setTargetPosition((int) targetPosition);
 
-        frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         frontLeft.setPower(speed);
         backLeft.setPower(speed);
@@ -313,10 +313,10 @@ public class DecodeAutoBlueBack extends OpMode
         frontRight.setTargetPosition((int) rightTargetPosition);
         backRight.setTargetPosition((int) rightTargetPosition);
 
-        frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         frontLeft.setPower(speed);
         backLeft.setPower(speed);
