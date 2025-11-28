@@ -27,7 +27,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        CRServo boxServo = hardwareMap.get(CRServo.class, "boxServo");
+        Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         DcMotorEx launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
 
         // Motor directions
@@ -97,10 +97,10 @@ public class DecodeDriveMode extends LinearOpMode {
 
             // Box servo to push the ball into the box
             if (gamepad2.a && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
-                boxServo.setPower(0.6);
+                boxServo.setPosition(0.6);
                 boxServoUp = true;
             } else if (gamepad2.a && boxServoUp){
-                boxServo.setPower(0.8);
+                boxServo.setPosition(0.8);
                 boxServoUp = false;
             }
 
