@@ -120,13 +120,14 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             String detectedColor = "UNKNOWN";
-            if (red > green && red > blue) {
-                detectedColor = "RED";
+            if (red > green && red > blue || green < 250 && purple < 250) {
+                detectedColor = "WHITE";
             } else if (green > blue && green > red) {
                 detectedColor = "GREEN";
-            } else if (purple > green) {
+            } else if (red > green || blue > green) {
                 detectedColor = "PURPLE";
             }
+            telemetry.addData("Detected Color: ", detectedColor);
 
             // Color conditions and led lightup
             /*if (green > purple && green > 50) {
