@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-//import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 
 
@@ -59,6 +59,7 @@ public class DecodeDriveMode extends LinearOpMode {
             telemetry.addData("Green", green);
             telemetry.addData("Purple", purple);
 
+            // Launch control
             if (gamepad2.right_trigger > 0) {
                 launch();
             } else {
@@ -118,19 +119,27 @@ public class DecodeDriveMode extends LinearOpMode {
                 boxServo.setPosition(0.85);
                 boxServoUp = false;
             }
-
+            // Begin color
             String detectedColor;
             // Color conditions and LED
             if (green > red && green > blue) {
                 detectedColor = "GREEN";
-                rgbLight.setPosition(0.500);
             } else if (red > green && blue > green && Math.abs(red - blue) < 50) {
                 detectedColor = "PURPLE";
-                rgbLight.setPosition(0.7222);
             } else {
                 detectedColor = "NONE";
-                rgbLight.setPosition(1.0);
-            } // No telemetry needed as data can be seen through LED
+            } // Telemetry needed for detectedColor
+            telemetry.addData("Detected Color: ", detectedColor);
+
+            // This is via above code
+            if (detectedColor.equals("NONE")) {
+                rgbLight.setPosition(1.0); // White = no purple and no green
+            } else if (detectedColor.equals("GREEN")) {
+                rgbLight.setPosition(0.500); // Green
+            } else {
+                rgbLight.setPosition(0.7222);
+            }
+            // End Color
 
             //Incremental velocity power
             if (gamepad2.left_stick_y > 0.0) {
