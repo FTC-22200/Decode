@@ -120,11 +120,11 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             String detectedColor = "UNKNOWN";
-            if (red > green && red > blue) {
+            if (red > green && red > blue || green < 250 && purple < 250) {
                 detectedColor = "RED";
             } else if (green > blue && green > red) {
                 detectedColor = "GREEN";
-            } else if (purple > green) {
+            } else if (red > green || blue > green) {
                 detectedColor = "PURPLE";
             }
 
@@ -138,9 +138,7 @@ public class DecodeDriveMode extends LinearOpMode {
             }
              */
 
-            // Green: g: 72, p: 85
-            // Purple: G: 2955, P: 3205
-            // White: G: 2310, P: 2275
+            // Problem: Green and Purple show, however null does not show
             if (detectedColor.equals("GREEN")) {
                 rgbLight.setPosition(0.500);
             } else if (detectedColor.equals("PURPLE")) {
