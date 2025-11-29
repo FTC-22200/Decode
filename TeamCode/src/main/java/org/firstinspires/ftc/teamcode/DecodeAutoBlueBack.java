@@ -330,5 +330,3 @@ public class DecodeAutoBlueBack extends OpMode
         return (driveTimer.seconds() > holdSeconds);
     }
 }
-
-

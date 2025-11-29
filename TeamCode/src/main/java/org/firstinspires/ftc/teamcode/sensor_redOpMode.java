@@ -150,17 +150,17 @@ public class sensor_redOpMode extends LinearOpMode {
                 wristMotor.setPower(0);
             }
 
-                int red = colorSensor.red();
-                int blue = colorSensor.blue();
-                int green = colorSensor.green();
+            int red = colorSensor.red();
+            int blue = colorSensor.blue();
+            int green = colorSensor.green();
 
             String detectedColor = "UNKNOWN";
             if (red > green && red > blue) {
                 detectedColor = "RED";
             } else if (blue > red && blue > green) {
                 detectedColor = "BLUE";
-            } else if (green > blue && red > blue) {
-                detectedColor = "YELLOW";
+            } else if (green > blue && green > red) {
+                detectedColor = "GREEN";
             }
 
             if (gamepad2.left_bumper && detectedColor.equals("BLUE")) {
