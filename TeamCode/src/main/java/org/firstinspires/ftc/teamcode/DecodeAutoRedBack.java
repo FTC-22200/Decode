@@ -22,7 +22,7 @@ public class DecodeAutoRedBack extends OpMode
     double launcher_velocity = 3000.0;
     double shotsToFire = 3;
     double TIME_BETWEEN_SHOTS = 2.0;
-    double boxServoTime = 0.20;
+    double boxServoTime = 0.75;
     boolean driveOffLine = true;
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime driveTimer = new ElapsedTime();
@@ -116,7 +116,7 @@ public class DecodeAutoRedBack extends OpMode
         }
 
         // Put here just in case the other team gets in the way of us driving off the line but still is able to go off the line, giving us the ranking point.
-        telemetry.addData("Press X", " to drive off the line!!!");
+        telemetry.addData("Press X", " to not drive off the line!");
         telemetry.addData("Drive off line: ", driveOffLine);
     }
 
@@ -230,7 +230,7 @@ public class DecodeAutoRedBack extends OpMode
             case LAUNCH:
                 if (boxServoTimer.seconds() > boxServoTime) {
                     intakeMotor.setPower(0.0);
-                    boxServo.setPosition(0.8);
+                    boxServo.setPosition(0.85);
 
                     if(shotTimer.seconds() > TIME_BETWEEN_SHOTS){
                         launchState = LaunchState.IDLE;
