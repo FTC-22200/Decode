@@ -120,11 +120,11 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             String detectedColor = "UNKNOWN";
-            if (red > green && red > blue || green < 250 && purple < 250) {
+            if (red > green && red > blue) {
                 detectedColor = "RED";
             } else if (green > blue && green > red) {
                 detectedColor = "GREEN";
-            } else if (red > green || blue > green) {
+            } else if (purple > green) {
                 detectedColor = "PURPLE";
             }
 
