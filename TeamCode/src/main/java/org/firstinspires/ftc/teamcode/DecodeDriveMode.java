@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-// import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+//import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 
 
@@ -120,7 +120,7 @@ public class DecodeDriveMode extends LinearOpMode {
             }
 
             String detectedColor;
-            // Color conditions and led lightup
+            // Color conditions and LED
             if (green > red && green > blue) {
                 detectedColor = "GREEN";
                 rgbLight.setPosition(0.500);
@@ -128,17 +128,9 @@ public class DecodeDriveMode extends LinearOpMode {
                 detectedColor = "PURPLE";
                 rgbLight.setPosition(0.7222);
             } else {
+                detectedColor = "NONE";
                 rgbLight.setPosition(1.0);
-                detectedColor = "NULL";
-            }
-
-            if (detectedColor.equals("GREEN")) {
-                rgbLight.setPosition(0.500);
-            } else if (detectedColor.equals("PURPLE")) {
-                rgbLight.setPosition(0.7222);
-            } else {
-                rgbLight.setPosition(1.0);
-            }
+            } // No telemetry needed as data can be seen through LED
 
             //Incremental velocity power
             if (gamepad2.left_stick_y > 0.0) {
