@@ -58,6 +58,8 @@ public class DecodeDriveMode extends LinearOpMode {
             int purple = colorSensor.red() + colorSensor.blue();
             telemetry.addData("Green", green);
             telemetry.addData("Purple", purple);
+            telemetry.addData("Red", red);
+            telemetry.addData("Blue", blue);
 
             if (gamepad2.right_trigger > 0) {
                 launch();
@@ -124,10 +126,10 @@ public class DecodeDriveMode extends LinearOpMode {
                 detectedColor = "WHITE";
             } else if (green > blue && green > red) {
                 detectedColor = "GREEN";
-            } else if (red > green || blue > green) {
+            } else if (green < purple) {
                 detectedColor = "PURPLE";
             }
-            telemetry.addData("Detected Color: ", detectedColor);
+            telemetry.addData("Detected Color:", detectedColor);
 
             // Color conditions and led lightup
             /*if (green > purple && green > 50) {
@@ -164,7 +166,7 @@ public class DecodeDriveMode extends LinearOpMode {
     }
     public void launch() { // changed from private
         if (gamepad2.dpad_up) { // high
-            launcher_velocity = 2700.0;
+            launcher_velocity = 2600.0; // originally 2700.0
         } else if (gamepad2.dpad_left) { // medium
             launcher_velocity = 2400.0;
         } else if (gamepad2.dpad_right) { // low-mid (new)
