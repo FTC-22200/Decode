@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-// import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 
 
@@ -21,7 +20,8 @@ public class DecodeDriveMode extends LinearOpMode {
     private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
-    Servo rgbLight;
+    CRServo intakeMotor2;
+    Servo rgbLight; // For color
 
     @Override
     public void runOpMode() {
@@ -32,6 +32,7 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
+        intakeMotor2 = hardwareMap.get(CRServo.class, "intakeMotor2");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
         colorSensor = hardwareMap.get(ColorSensor.class, "Color Sensor");
@@ -102,11 +103,13 @@ public class DecodeDriveMode extends LinearOpMode {
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            // Intake motor control
+            // Intake motor's control
             if (gamepad2.right_stick_y != 0.0) {
                 intakeMotor.setPower(gamepad2.right_stick_y);
+                intakeMotor2.setPower(gamepad2.right_stick_y);
             } else {
                 intakeMotor.setPower(0.0);
+                intakeMotor2.setPower(0.0);
             }
 
             // Box servo to push the ball into the box
@@ -121,6 +124,7 @@ public class DecodeDriveMode extends LinearOpMode {
                 boxServoUp = false;
             }
 
+            // Detected color through sensor
             String detectedColor = "UNKNOWN";
             if (red > green && red > blue || green < 250 && purple < 250) {
                 detectedColor = "WHITE";
@@ -131,17 +135,7 @@ public class DecodeDriveMode extends LinearOpMode {
             }
             telemetry.addData("Detected Color:", detectedColor);
 
-            // Color conditions and led lightup
-            /*if (green > purple && green > 50) {
-                detectedColor = "GREEN";
-            } else if (purple > green && purple > 100) {
-                detectedColor = "PURPLE";
-            } else {
-                detectedColor = "NULL";
-            }
-             */
-
-            // Problem: Green and Purple show, however null does not show
+            // Displaying color
             if (detectedColor.equals("GREEN")) {
                 rgbLight.setPosition(0.500);
             } else if (detectedColor.equals("PURPLE")) {
