@@ -14,63 +14,73 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="DecodeAuto", group="Decode")
-//@Disabled
-public class DecodeAutoRedBack extends OpMode
-{
+public  class DecodeAutoRedBack extends OpMode {
     private DcMotorEx launcher;
     double launcher_power = 1.0;
-    double launcher_velocity = 3000.0;
+    // launcher velocities (tune to your hardware)
+    final double LAUNCHER_TARGET_VELOCITY = 2650.0;
+    final double LAUNCHER_MIN_VELOCITY = 2500.0;
+
     double shotsToFire = 3;
-    double TIME_BETWEEN_SHOTS = 2.0;
-    double boxServoTime = 0.75;
+    double TIME_BETWEEN_SHOTS = 1.0;    // reduced cycle time (tune)
+    double boxServoTime = 0.5;          // servo dwell time (tune)
+    double robotRotationAngle = 35.0;
     boolean driveOffLine = true;
+
     private ElapsedTime shotTimer = new ElapsedTime();
     private ElapsedTime driveTimer = new ElapsedTime();
     private ElapsedTime boxServoTimer = new ElapsedTime();
-    final double LAUNCHER_TARGET_VELOCITY = 2750.0;
-    final double LAUNCHER_MIN_VELOCITY = 2650.0;
-    double robotRotationAngle = 35.0;
+    private ElapsedTime launcherSpinupTimer = new ElapsedTime();
+
+    // motion constants (tune these distances to match your robot and field)
     final double DRIVE_SPEED = 0.5;
-    final double ROTATE_SPEED = 0.2;
+    final double ROTATE_SPEED = 1.0;
     final double WHEEL_DIAMETER_MM = 96;
     final double ENCODER_TICKS_PER_REV = 537.7;
     final double TICKS_PER_MM = (ENCODER_TICKS_PER_REV / (WHEEL_DIAMETER_MM * Math.PI));
     final double TRACK_WIDTH_MM = 404;
+
+    // Distances (in inches) — TUNE these on your field:
+    // Distance from starting position (front of red basket) to the shoot spot (edge where lines meet)
+    final double SHOOT_POSITION_DISTANCE_IN = 48.0;      // <-- tune this to place robot at the meeting point of lines
+    // Distance to drive BACK into the middle of the field after shooting
+    final double RETURN_TO_MIDDLE_DISTANCE_IN = 24.0;    // <-- tune to move into middle of field
+
     private DcMotorEx frontLeft = null;
     private DcMotorEx backLeft = null;
     private DcMotorEx frontRight = null;
     private DcMotorEx backRight = null;
     private DcMotor intakeMotor = null;
     private Servo boxServo = null;
-    private enum LaunchState {
-        IDLE,
-        PREPARE,
-        LAUNCH;
-    }
+
+    // launch state machine
+    private enum LaunchState { IDLE, PREPARE, LAUNCH }
     private LaunchState launchState;
+
+    // autonomous high-level states
     private enum AutonomousState {
+        POINT_TO_SHOOT,
         LAUNCH,
         WAIT_FOR_LAUNCH,
-        DRIVING_AWAY_FROM_GOAL,
+        RETURN_TO_MIDDLE,
         ROTATING,
-        DRIVING_OFF_LINE,
-        COMPLETE;
+        COMPLETE
     }
     private AutonomousState autonomousState;
 
-
-
+    // flags to ensure we set run-to-position targets only once when entering a state
+    private boolean driveTargetSet = false;
+    private boolean rotateTargetSet = false;
 
     @Override
     public void init() {
-        robotRotationAngle = 35;
-        autonomousState = AutonomousState.ROTATING;
+        autonomousState = AutonomousState.POINT_TO_SHOOT;
         launchState = LaunchState.IDLE;
 
-        // Defining functions
+        // Hardware mapping
         frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
-        frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
@@ -84,13 +94,12 @@ public class DecodeAutoRedBack extends OpMode
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         launcher.setDirection(DcMotorEx.Direction.FORWARD);
 
-
+        // Reset encoders & braking
         frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         intakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcher.setZeroPowerBehavior(BRAKE);
 
         frontLeft.setZeroPowerBehavior(BRAKE);
         backLeft.setZeroPowerBehavior(BRAKE);
@@ -99,182 +108,192 @@ public class DecodeAutoRedBack extends OpMode
         intakeMotor.setZeroPowerBehavior(BRAKE);
         launcher.setZeroPowerBehavior(BRAKE);
 
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,new PIDFCoefficients(300,0,0,10));
+        launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        launcher.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(300,0,0,10));
 
-        telemetry.addData("Auto Initalization Complete", "Initialized");
-        telemetry.addData("aiden sucks", "");
+        // initial servo position (closed)
+        boxServo.setPosition(0.85);
+        telemetry.addData("Init", "Complete");
     }
 
     @Override
     public void init_loop() {
-
         if (gamepad1.x) {
             driveOffLine = false;
         } else {
             driveOffLine = true;
         }
-
-        // Put here just in case the other team gets in the way of us driving off the line but still is able to go off the line, giving us the ranking point.
         telemetry.addData("Press X", " to not drive off the line!");
         telemetry.addData("Drive off line: ", driveOffLine);
     }
 
     @Override
     public void start() {
+        // reset shot counter each match start
+        shotsToFire = 3;
     }
 
     @Override
     public void loop() {
-        switch (autonomousState){
-            /*
-             * Since the first state of our auto is LAUNCH, this is the first "case" we encounter.
-             * This case is very simple. We call our .launch() function with "true" in the parameter.
-             * This "true" value informs our launch function that we'd like to start the process of
-             * firing a shot. We will call this function with a "false" in the next case. This
-             * "false" condition means that we are continuing to call the function every loop,
-             * allowing it to cycle through and continue the process of launching the first ball.
-             */
-            case LAUNCH:
-                launch(true);
-                autonomousState = AutonomousState.WAIT_FOR_LAUNCH;
-                break;
-
-            case WAIT_FOR_LAUNCH:
-                /*
-                 * A technique we leverage frequently in this code are functions which return a
-                 * boolean. We are using this function in two ways. This function actually moves the
-                 * motors and servos in a way that launches the ball, but it also "talks back" to
-                 * our main loop by returning either "true" or "false". We've written it so that
-                 * after the shot we requested has been fired, the function will return "true" for
-                 * one cycle. Once the launch function returns "true", we proceed in the code, removing
-                 * one from the shotsToFire variable. If shots remain, we move back to the LAUNCH
-                 * state on our state machine. Otherwise, we reset the encoders on our drive motors
-                 * and move onto the next state.
-                 */
-                if(launch(false)) {
-                    shotsToFire -= 1;
-                    if(shotsToFire > 0) {
-                        autonomousState = AutonomousState.LAUNCH;
-                    } else {
-                        frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                        frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                        backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                        backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                        launcher.setVelocity(0);
-                        robotRotationAngle = 0.0;
-                        autonomousState = AutonomousState.ROTATING;
-                    }
-                }
-                break;
-
-            case DRIVING_AWAY_FROM_GOAL:
-                /*
-                 * This is another function that returns a boolean. This time we return "true" if
-                 * the robot has been within a tolerance of the target position for "holdSeconds."
-                 * Once the function returns "true" we reset the encoders again and move on.
-                 */
-                if(drive(DRIVE_SPEED, 6, DistanceUnit.INCH, 1)){
-                    frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                    frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                    backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                    backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                    autonomousState = AutonomousState.COMPLETE;
-                }
-                break;
-
-            case ROTATING:
-                // robotRotationAngle = 35;
-
+        telemetry.addData("State", autonomousState);
+        telemetry.addData("LaunchState", launchState);
+        switch (autonomousState) {
+            case POINT_TO_SHOOT:
+                // Drive forward from start to shooting spot (distance positive = forward)
                 if(rotate(ROTATE_SPEED, robotRotationAngle, AngleUnit.DEGREES,1)){
                     frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                     frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                     backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                     backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                    if (robotRotationAngle == 0.0) {
+                    resetDriveFlags();
+                    // prepare launcher sequence
+                    autonomousState = AutonomousState.LAUNCH;
+                }
+                break;
+
+            case LAUNCH:
+                // start shot
+                launch(true);
+                autonomousState = AutonomousState.WAIT_FOR_LAUNCH;
+                break;
+
+            case WAIT_FOR_LAUNCH:
+                if (launch(false)) {
+                    shotsToFire -= 1;
+                    if (shotsToFire > 0) {
+                        autonomousState = AutonomousState.LAUNCH;
+                    } else {
+                        // finished firing all shots; stop launcher and drive back to middle
+                        launcher.setVelocity(0);
                         if (driveOffLine) {
-                            autonomousState = AutonomousState.DRIVING_AWAY_FROM_GOAL;
+                            autonomousState = AutonomousState.ROTATING;
                         } else {
                             autonomousState = AutonomousState.COMPLETE;
                         }
-                    } else {
-                        autonomousState = AutonomousState.LAUNCH;
+                        resetDriveFlags();
                     }
                 }
                 break;
 
-            case DRIVING_OFF_LINE:
-                if(drive(DRIVE_SPEED, -26, DistanceUnit.INCH, 1)){
+            case RETURN_TO_MIDDLE:
+                // Drive BACK toward middle of field; here we use a positive distance to drive forward
+                // because our drive() interprets "distance" direction consistently per call.
+                if (drive(DRIVE_SPEED, 36.0, DistanceUnit.INCH, 0.5)) {
+                    resetDriveFlags();
                     autonomousState = AutonomousState.COMPLETE;
                 }
                 break;
+
+            case ROTATING:
+                if(rotate(ROTATE_SPEED, -robotRotationAngle, AngleUnit.DEGREES,1)){
+                    frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                    resetDriveFlags();
+                    if (driveOffLine) {
+                        autonomousState = AutonomousState.RETURN_TO_MIDDLE;
+                    } else {
+                        autonomousState = AutonomousState.COMPLETE;
+                    }
+                }
+                break;
+
+            case COMPLETE:
+                // stop all motion
+                frontLeft.setPower(0);
+                backLeft.setPower(0);
+                frontRight.setPower(0);
+                backRight.setPower(0);
+                intakeMotor.setPower(0);
+                launcher.setVelocity(0);
+                // nothing else to do
+                break;
         }
     }
-    boolean launch(boolean shotRequested){
+
+    // reset flags used for setting targets once per state
+    private void resetDriveFlags() {
+        driveTargetSet = false;
+        rotateTargetSet = false;
+        driveTimer.reset();
+    }
+
+    // Launch routine: request shotRequested=true one time to start a shot
+    boolean launch(boolean shotRequested) {
         switch (launchState) {
             case IDLE:
                 if (shotRequested) {
                     launchState = LaunchState.PREPARE;
+                    launcherSpinupTimer.reset();
                     shotTimer.reset();
                 }
                 break;
+
             case PREPARE:
+                // Spin up launcher
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY){
+                // Wait for either sufficient velocity OR a short timeout (failsafe)
+                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY || launcherSpinupTimer.seconds() > 1.5) {
                     launchState = LaunchState.LAUNCH;
                     intakeMotor.setPower(1.0);
-                    boxServo.setPosition(0.6);
+                    boxServo.setPosition(0.6); // open box to feed
                     boxServoTimer.reset();
+                    shotTimer.reset();
                 }
                 break;
+
             case LAUNCH:
+                // Wait for servo to move and ball to feed
                 if (boxServoTimer.seconds() > boxServoTime) {
+                    // stop intake and close box briefly
                     intakeMotor.setPower(0.0);
                     boxServo.setPosition(0.85);
 
-                    if(shotTimer.seconds() > TIME_BETWEEN_SHOTS){
+                    // wait between shots
+                    if (shotTimer.seconds() > TIME_BETWEEN_SHOTS) {
                         launchState = LaunchState.IDLE;
-                        return true;
+                        return true; // signal shot finished
                     }
                 }
+                break;
         }
         return false;
     }
+
+    // Drive: improved to set targets only once per entry to state
     boolean drive(double speed, double distance, DistanceUnit distanceUnit, double holdSeconds) {
         final double TOLERANCE_MM = 10;
-        /*
-         * In this function we use a DistanceUnits. This is a class that the FTC SDK implements
-         * which allows us to accept different input units depending on the user's preference.
-         * To use these, put both a double and a DistanceUnit as parameters in a function and then
-         * call distanceUnit.toMm(distance). This will return the number of mm that are equivalent
-         * to whatever distance in the unit specified. We are working in mm for this, so that's the
-         * unit we request from distanceUnit. But if we want to use inches in our function, we could
-         * use distanceUnit.toInches() instead!
-         */
         double targetPosition = (distanceUnit.toMm(distance) * TICKS_PER_MM);
 
-        frontLeft.setTargetPosition((int) targetPosition);
-        backLeft.setTargetPosition((int) targetPosition);
-        frontRight.setTargetPosition((int) targetPosition);
-        backRight.setTargetPosition((int) targetPosition);
+        if (!driveTargetSet) {
+            // reset encoders so target is relative to current pose
+            frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            frontLeft.setTargetPosition((int) targetPosition);
+            backLeft.setTargetPosition((int) targetPosition);
+            frontRight.setTargetPosition((int) targetPosition);
+            backRight.setTargetPosition((int) targetPosition);
 
-        frontLeft.setPower(speed);
-        backLeft.setPower(speed);
-        frontRight.setPower(speed);
-        backRight.setPower(speed);
-        /*
-         * Here we check if we are within tolerance of our target position or not. We calculate the
-         * absolute error (distance from our setpoint regardless of if it is positive or negative)
-         * and compare that to our tolerance. If we have not reached our target yet, then we reset
-         * the driveTimer. Only after we reach the target can the timer count higher than our
-         * holdSeconds variable.
-         */
-        if(Math.abs(targetPosition - frontLeft.getCurrentPosition()) > (TOLERANCE_MM * TICKS_PER_MM)){
+            frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+            frontLeft.setPower(Math.abs(speed));
+            backLeft.setPower(Math.abs(speed));
+            frontRight.setPower(Math.abs(speed));
+            backRight.setPower(Math.abs(speed));
+
+            driveTimer.reset();
+            driveTargetSet = true;
+        }
+
+        // If not at target, reset hold timer
+        if (Math.abs(targetPosition - frontLeft.getCurrentPosition()) > (TOLERANCE_MM * TICKS_PER_MM)) {
             driveTimer.reset();
         }
 
@@ -282,55 +301,45 @@ public class DecodeAutoRedBack extends OpMode
     }
 
     /**
-     * @param speed From 0-1
-     * @param angle the amount that the robot should rotate
-     * @param angleUnit the unit that angle is in
-     * @param holdSeconds the number of seconds to wait at position before returning true.
-     * @return True if the motors are within tolerance of the target position for more than
-     *         holdSeconds. False otherwise.
+     * rotate: simple encoder-based rotate (keeps existing implementation,
+     * but not used in this version; leave it for future tuning)
      */
-    boolean rotate(double speed, double angle, AngleUnit angleUnit, double holdSeconds){
+    boolean rotate(double speed, double angle, AngleUnit angleUnit, double holdSeconds) {
         final double TOLERANCE_MM = 10;
+        double targetMm = angleUnit.toRadians(angle) * (TRACK_WIDTH_MM / 2);
+        double leftTargetPosition = -(targetMm * TICKS_PER_MM);
+        double rightTargetPosition = targetMm * TICKS_PER_MM;
 
-        /*
-         * Here we establish the number of mm that our drive wheels need to cover to create the
-         * requested angle. We use radians here because it makes the math much easier.
-         * Our robot will have rotated one radian when the wheels of the robot have driven
-         * 1/2 of the track width of our robot in a circle. This is also the radius of the circle
-         * that the robot tracks when it is rotating. So, to find the number of mm that our wheels
-         * need to travel, we just need to multiply the requested angle in radians by the radius
-         * of our turning circle.
-         */
-        double targetMm = angleUnit.toRadians(angle)*(TRACK_WIDTH_MM/2);
+        if (!rotateTargetSet) {
+            frontLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            backLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            frontRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            backRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        /*
-         * We need to set the left motor to the inverse of the target so that we rotate instead
-         * of driving straight.
-         */
-        double leftTargetPosition = -(targetMm*TICKS_PER_MM);
-        double rightTargetPosition = targetMm*TICKS_PER_MM;
+            frontLeft.setTargetPosition((int) leftTargetPosition);
+            backLeft.setTargetPosition((int) leftTargetPosition);
+            frontRight.setTargetPosition((int) rightTargetPosition);
+            backRight.setTargetPosition((int) rightTargetPosition);
 
-        frontLeft.setTargetPosition((int) leftTargetPosition);
-        backLeft.setTargetPosition((int) leftTargetPosition);
-        frontRight.setTargetPosition((int) rightTargetPosition);
-        backRight.setTargetPosition((int) rightTargetPosition);
+            frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-        frontLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        frontRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            frontLeft.setPower(Math.abs(speed));
+            backLeft.setPower(Math.abs(speed));
+            frontRight.setPower(Math.abs(speed));
+            backRight.setPower(Math.abs(speed));
 
-        frontLeft.setPower(speed);
-        backLeft.setPower(speed);
-        frontRight.setPower(speed);
-        backRight.setPower(speed);
+            driveTimer.reset();
+            rotateTargetSet = true;
+        }
 
-        if((Math.abs(leftTargetPosition - frontLeft.getCurrentPosition())) > (TOLERANCE_MM * TICKS_PER_MM)){
+        if ((Math.abs(leftTargetPosition - frontLeft.getCurrentPosition())) > (TOLERANCE_MM * TICKS_PER_MM)) {
             driveTimer.reset();
         }
 
         return (driveTimer.seconds() > holdSeconds);
     }
 }
-
 

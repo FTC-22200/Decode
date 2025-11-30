@@ -94,7 +94,7 @@ public class StarterBotAuto extends OpMode
      * robot. Track width is used to determine the amount of linear distance each wheel needs to
      * travel to create a specified rotation of the robot.
      */
-    final double DRIVE_SPEED = 0.5;
+    final double DRIVE_SPEED = 1.0;
     final double ROTATE_SPEED = 0.2;
     final double WHEEL_DIAMETER_MM = 96;
     final double ENCODER_TICKS_PER_REV = 537.7;
