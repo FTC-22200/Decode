@@ -126,6 +126,7 @@ public  class DecodeAutoRedFront extends OpMode {
         }
         telemetry.addData("Press X", " to not drive off the line!");
         telemetry.addData("Drive off line: ", driveOffLine);
+        telemetry.addData("Aiden", " sucks >:(");
     }
 
     @Override
