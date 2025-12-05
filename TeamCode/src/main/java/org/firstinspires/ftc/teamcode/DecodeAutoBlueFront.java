@@ -43,7 +43,7 @@ public  class DecodeAutoBlueFront extends OpMode {
 
     // Distances (in inches) — TUNE these on your field:
     // Distance from starting position (front of red basket) to the shoot spot (edge where lines meet)
-    final double SHOOT_POSITION_DISTANCE_IN = 48.0;      // <-- tune this to place robot at the meeting point of lines
+    final double SHOOT_POSITION_DISTANCE_IN = 55.0;      // <-- tune this to place robot at the meeting point of lines
     // Distance to drive BACK into the middle of the field after shooting
     final double RETURN_TO_MIDDLE_DISTANCE_IN = 24.0;    // <-- tune to move into middle of field
 
@@ -142,7 +142,7 @@ public  class DecodeAutoBlueFront extends OpMode {
         switch (autonomousState) {
             case DRIVE_TO_SHOOT:
                 // Drive forward from start to shooting spot (distance positive = forward)
-                if (drive(DRIVE_SPEED, SHOOT_POSITION_DISTANCE_IN, DistanceUnit.INCH, 0.5)) {
+                if (drive(DRIVE_SPEED, -SHOOT_POSITION_DISTANCE_IN, DistanceUnit.INCH, 0.5)) {
                     // reached shoot position; reset drive flags for next movement
                     resetDriveFlags();
                     // prepare launcher sequence
@@ -177,7 +177,7 @@ public  class DecodeAutoBlueFront extends OpMode {
             case RETURN_TO_MIDDLE:
                 // Drive BACK toward middle of field; here we use a positive distance to drive forward
                 // because our drive() interprets "distance" direction consistently per call.
-                if (drive(DRIVE_SPEED, -RETURN_TO_MIDDLE_DISTANCE_IN, DistanceUnit.INCH, 0.5)) {
+                if (drive(DRIVE_SPEED, RETURN_TO_MIDDLE_DISTANCE_IN, DistanceUnit.INCH, 0.5)) {
                     resetDriveFlags();
                     autonomousState = AutonomousState.COMPLETE;
                 }
