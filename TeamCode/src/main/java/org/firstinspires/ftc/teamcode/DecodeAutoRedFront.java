@@ -18,7 +18,7 @@ public  class DecodeAutoRedFront extends OpMode {
     private DcMotorEx launcher;
     double launcher_power = 1.0;
     // launcher velocities (tune to your hardware)
-    final double LAUNCHER_TARGET_VELOCITY = 1850.0;
+    final double LAUNCHER_TARGET_VELOCITY = 1850.0; // needs testing
     final double LAUNCHER_MIN_VELOCITY = 1750.0;
 
     double shotsToFire = 3;

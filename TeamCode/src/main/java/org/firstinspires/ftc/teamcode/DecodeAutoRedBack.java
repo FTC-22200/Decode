@@ -18,13 +18,13 @@ public  class DecodeAutoRedBack extends OpMode {
     private DcMotorEx launcher;
     double launcher_power = 1.0;
     // launcher velocities (tune to your hardware)
-    final double LAUNCHER_TARGET_VELOCITY = 2500.0;
-    final double LAUNCHER_MIN_VELOCITY = 2400.0;
+    final double LAUNCHER_TARGET_VELOCITY = 1800.0;
+    final double LAUNCHER_MIN_VELOCITY = 1700.0;
 
     double shotsToFire = 3;
     double TIME_BETWEEN_SHOTS = 1.0;    // reduced cycle time (tune)
     double boxServoTime = 0.5;          // servo dwell time (tune)
-    double robotRotationAngle = 50.0;
+    double robotRotationAngle = 45.0;
     boolean driveOffLine = true;
 
     private ElapsedTime shotTimer = new ElapsedTime();
