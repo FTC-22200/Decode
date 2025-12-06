@@ -34,7 +34,7 @@ public  class DecodeAutoBlueFront extends OpMode {
 
     // motion constants (tune these distances to match your robot and field)
     final double DRIVE_SPEED = 0.5;
-    double robotRotationAngle = 45.0;
+    double robotRotationAngle = 60.0;
     final double ROTATE_SPEED = 1.0;
     final double WHEEL_DIAMETER_MM = 96;
     final double ENCODER_TICKS_PER_REV = 537.7;
