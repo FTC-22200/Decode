@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -53,9 +54,11 @@ public  class DecodeAutoBlueFront extends OpMode {
     private DcMotorEx backRight = null;
     private DcMotor intakeMotor = null;
     private Servo boxServo = null;
+    CRServo leftFeeder;
+    CRServo rightFeeder;
 
     // launch state machine
-    private enum LaunchState { IDLE, PREPARE, LAUNCH }
+    private enum LaunchState { IDLE, PREPARE, PREPARE2, LAUNCH }
     private LaunchState launchState;
 
     // autonomous high-level states
@@ -84,6 +87,8 @@ public  class DecodeAutoBlueFront extends OpMode {
         frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
+        leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
         boxServo = hardwareMap.get(Servo.class, "boxServo");
 
@@ -232,22 +237,36 @@ public  class DecodeAutoBlueFront extends OpMode {
                 // Spin up launcher
                 launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
                 // Wait for either sufficient velocity OR a short timeout (failsafe)
-                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY || launcherSpinupTimer.seconds() > 1.5) {
-                    launchState = LaunchState.LAUNCH;
-                    intakeMotor.setPower(1.0);
+
+                if (launcher.getVelocity() > LAUNCHER_MIN_VELOCITY || launcherSpinupTimer.seconds() > 5.0) {
+                    intakeMotor.setPower(0.0);
                     boxServo.setPosition(0.6); // open box to feed
+                    leftFeeder.setPower(0.0);
+                    rightFeeder.setPower(0.0);
                     boxServoTimer.reset();
                     shotTimer.reset();
+                    launchState = LaunchState.PREPARE2;
                 }
                 break;
-
+            case PREPARE2:
+                intakeMotor.setPower(1.0);
+                boxServo.setPosition(0.6); // open box to feed
+                leftFeeder.setPower(-1.0);
+                rightFeeder.setPower(1.0);
+                if (boxServoTimer.seconds() > 0.8) {
+                    boxServoTimer.reset();
+                    shotTimer.reset();
+                    launchState = LaunchState.LAUNCH;
+                }
             case LAUNCH:
-                // Wait for servo to move and ball to feed
+                // push ball up
+                intakeMotor.setPower(0.0);
+                leftFeeder.setPower(0.0);
+                rightFeeder.setPower(0.0);
+                boxServo.setPosition(0.85);
                 if (boxServoTimer.seconds() > boxServoTime) {
-                    // stop intake and close box briefly
-                    intakeMotor.setPower(0.0);
-                    boxServo.setPosition(0.85);
-
+                    // Open box back up after ts is shot
+                    boxServo.setPosition(0.6);
                     // wait between shots
                     if (shotTimer.seconds() > TIME_BETWEEN_SHOTS) {
                         launchState = LaunchState.IDLE;
@@ -340,4 +359,3 @@ public  class DecodeAutoBlueFront extends OpMode {
         return (driveTimer.seconds() > holdSeconds);
     }
 }
-
