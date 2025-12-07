@@ -2,155 +2,192 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name = "DriveMode")
-public class DriveMode extends LinearOpMode {
+
+
+@TeleOp
+public class DecodeDriveMode extends LinearOpMode {
+    double launcher_velocity = 3000.0;
+    boolean boxServoUp = false;
+    private ElapsedTime boxServoTimer = new ElapsedTime();
+    private DcMotor intakeMotor;
+    private DcMotorEx launcher;
+    CRServo leftFeeder;
+    CRServo rightFeeder;
+    Servo rgbLight; // For color
+
     @Override
     public void runOpMode() {
-
+        ColorSensor colorSensor;
         // Motor config
-        DcMotor frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        DcMotor backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        DcMotor frontRight = hardwareMap.get(DcMotor.class, "frontRight");
-        DcMotor backRight = hardwareMap.get(DcMotor.class, "backRight");
-        DcMotor linearMotor = hardwareMap.get(DcMotor.class, "linearMotor");
-        linearMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        DcMotor intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
-
-        // Servo config
+        DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
+        DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
+        DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
+        leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
-        Servo wristServo = hardwareMap.get(Servo.class, "wristServo");
-        Servo leftWheelServo = hardwareMap.get(Servo.class, "leftWheelServo");
-        Servo rightWheelServo = hardwareMap.get(Servo.class, "rightWheelServo");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        colorSensor = hardwareMap.get(ColorSensor.class, "Color Sensor");
+        rgbLight = hardwareMap.get(Servo.class, "RGB Light");
 
-        // Set default positions
-        leftWheelServo.setPosition(0.5);
-        rightWheelServo.setPosition(0.5);
-
-        frontLeft.setDirection(DcMotor.Direction.FORWARD);
-        backLeft.setDirection(DcMotor.Direction.FORWARD);
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
-        linearMotor.setDirection(DcMotor.Direction.FORWARD);
+        // Motor directions
+        frontLeft.setDirection(DcMotorEx.Direction.FORWARD);
+        backLeft.setDirection(DcMotorEx.Direction.FORWARD);
+        frontRight.setDirection(DcMotorEx.Direction.REVERSE);
+        backRight.setDirection(DcMotorEx.Direction.REVERSE);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        launcher.setDirection(DcMotorEx.Direction.FORWARD);
 
-        final double INCREMENT2 = 0.1;     // amount to slew servo each CYCLE_MS cycle
-        final int CYCLE_MS = 50;           // period of each cycle
-        final double MAX_POS2 = 0.4;       // Maximum rotational position
-        final double MIN_POS2 = 1.0;       // Minimum rotational position
-        double maxSafeTemperature = 75.0; // Define a maximum safe temperature
-
-        // Define class members
-        double position2 = 1.0; // Start at maximum position
-        boolean rampUp = true;
-        boolean boxUp = false;
-        boolean boxDown = false;
+        final int CYCLE_MS = 50;
 
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+            // Color declaration
+            int red = colorSensor.red();
+            int blue = colorSensor.blue();
+            int green = colorSensor.green();
+            int purple = colorSensor.red() + colorSensor.blue();
+            telemetry.addData("Green", green);
+            telemetry.addData("Purple", purple);
+            telemetry.addData("Red", red);
+            telemetry.addData("Blue", blue);
+
+            if (gamepad2.right_trigger > 0) {
+                launch();
+            } else {
+                launcher.setPower(0.0);
+            }
 
             double speedMultiplier = 1.0;
-
             if (gamepad1.left_trigger > 0.5) {
-                speedMultiplier = 0.25; // Reduce speed by a quarter when you hold left trigger
+                speedMultiplier *= 0.4; // Original - prev was 0.5
+                frontLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+                frontRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+                backLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+                backRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            } else {
+                frontLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+                frontRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+                backLeft.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+                backRight.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
             }
-            double y = -gamepad1.left_stick_y * speedMultiplier; // For forwards/backwards movement
-            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier; // The 1.1 multiplier is to counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x * speedMultiplier; // Turning left/right
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1); // Ensures motor values stay within [-1, 1]
-            double fL_Motor = (y + x + rx) / denominator; // fL = FrontLeft
-            double bL_Motor = (y - x + rx) / denominator; // bL = BackLeft
-            double fR_Motor = (y - x - rx) / denominator; // fR = FrontRight
-            double bR_Motor = (y + x - rx) / denominator; // bR = BackRight
+
+            // Drive calculations
+            double y = -gamepad1.left_stick_y * speedMultiplier;
+            double x = gamepad1.left_stick_x * 1.1 * speedMultiplier;
+            double rx = -gamepad1.right_stick_x * speedMultiplier;
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+
+            // To decrease 'noise' via small movements
+            if (Math.abs(x) < 0.05) x = 0;
+            if (Math.abs(y) < 0.05) y= 0;
+            if (Math.abs(rx) < 0.05) rx = 0;
+
+            double fL_Motor = (y + x + rx) / denominator;
+            double bL_Motor = (y - x + rx) / denominator;
+            double fR_Motor = (y - x - rx) / denominator;
+            double bR_Motor = (y + x - rx) / denominator;
 
             frontLeft.setPower(fL_Motor);
             backLeft.setPower(bL_Motor);
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
-            /* Linear motor control
+            // Intake motor's control
+            if (gamepad2.right_stick_y != 0.0) {
+                intakeMotor.setPower(gamepad2.right_stick_y);
+            } else {
+                intakeMotor.setPower(0.0);
+            }
+
             if (gamepad2.right_bumper) {
-                linearMotor.setPower(-0.4); // Reverse if right bumper pressed
-            } else if (gamepad2.right_trigger > 0) {
-                linearMotor.setPower(Math.abs(gamepad2.right_trigger)); // Forward with right trigger
+                leftFeeder.setPower(-1.0);
+                rightFeeder.setPower(1.0);
             } else {
-                linearMotor.setPower(0.0); // Stop linear motor if no input
+                leftFeeder.setPower(0.0);
+                rightFeeder.setPower(0.0);
             }
 
-            // Box servo control
-            if (gamepad2.x && !gamepad2.y && !boxDown && !boxUp && !rampUp) {
-                boxDown = true;
+            // Box servo to push the ball into the box
+            /*if (gamepad2.y && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
+                boxServo.setPosition(0.6);
+                boxServoUp = true;
+                boxServoTimer.reset();
             }
-            if (gamepad2.y && !gamepad2.x && !boxDown && !boxUp && rampUp) {
-                boxUp = true;
-            }
-            if (boxUp && boxDown) {
-                boxDown = false;
-                boxUp = false;
-            }
-            if (boxUp) {
-                position2 -= INCREMENT2;
-                if (position2 <= MAX_POS2) {
-                    rampUp = false;
-                    boxUp = false;
-                    position2 = MAX_POS2;
-                }
-            }
-
-            if (boxDown) {
-                position2 += INCREMENT2;
-                if (position2 >= MIN_POS2) {
-                    rampUp = true;
-                    boxDown = false;
-                    position2 = MIN_POS2;
-                }
-            }
-            boxServo.setPosition(position2);
-
-            // Intake motor control
-            if (gamepad2.dpad_up) {
-                intakeMotor.setPower(1);
-            } else if (gamepad2.dpad_down) {
-                intakeMotor.setPower(-1);
-            } else {
-                intakeMotor.setPower(0);
-            }
-
-            // Wrist servo control
-            if (gamepad2.b) {
-                wristServo.setPosition(0.65); // Changed from 1.8 to 1.0, assuming 1.0 is maximum
-            } else if (gamepad2.a) {
-                wristServo.setPosition(0.15); // Adjusted to a valid position
-            } else if (gamepad2.dpad_right) {
-                wristServo.setPosition(0);
-            }
-
-            // Intake servo control
-            if (gamepad2.left_stick_y < 0) {
-                leftWheelServo.setPosition(1.0); // Full forward
-                rightWheelServo.setPosition(0.0);
-            } else if (gamepad2.left_stick_y > 0) {
-                leftWheelServo.setPosition(0.0); // Reverse the servo
-                rightWheelServo.setPosition(1.0);
-            } else if (gamepad2.left_stick_y == 0) {
-                leftWheelServo.setPosition(0.5); // Stop the servo
-                rightWheelServo.setPosition(0.5);
-            }
-
-            // Optional: Add telemetry to display servo positions
-            telemetry.addData("Left Wheel Servo Position", leftWheelServo.getPosition());
-            telemetry.addData("Right Wheel Servo Position", rightWheelServo.getPosition());
-            telemetry.addData("Box Down", boxDown);
-            telemetry.addData("Box Up", boxUp);
-            telemetry.addData("Ramp Up", rampUp);
             */
+            if (gamepad2.y && !boxServoUp) {
+                boxServo.setPosition(0.6);
+                boxServoUp = true;
+                boxServoTimer.reset();
+            }
+            // Timer
+            if (boxServoUp && boxServoTimer.seconds() > 0.75) {
+                boxServo.setPosition(0.85);
+                boxServoUp = false;
+            }
+
+            // Detected color through sensor
+            String detectedColor = "UNKNOWN";
+            if (red > green && red > blue || green < 250 && purple < 250) {
+                detectedColor = "WHITE";
+            } else if (green > blue && green > red) {
+                detectedColor = "GREEN";
+            } else if (green < purple) {
+                detectedColor = "PURPLE";
+            }
+            telemetry.addData("Detected Color:", detectedColor);
+
+            // Displaying color
+            if (detectedColor.equals("GREEN")) {
+                rgbLight.setPosition(0.500);
+            } else if (detectedColor.equals("PURPLE")) {
+                rgbLight.setPosition(0.7222);
+            } else {
+                rgbLight.setPosition(1.0);
+            }
+
+            if (gamepad2.left_bumper) {
+                launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            } else {
+                launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+            }
+
+            //Incremental velocity power
+            if (gamepad2.left_stick_y > 0.0) {
+                launcher_velocity += 100;
+            } else if (gamepad2.left_stick_y < 0.0) {
+                launcher_velocity -= 100;
+            }
+
             telemetry.update();
+            telemetry.addData("Launcher target velocity : ", launcher_velocity);
+            telemetry.addData("Acc target velocity: ", launcher.getVelocity());
             sleep(CYCLE_MS);
             idle();
         }
+    }
+    public void launch() { // changed from private
+        if (gamepad2.dpad_up) { // high
+            launcher_velocity = 2225.0; // AIDEN sucks bad >:((
+        } else if (gamepad2.dpad_left) { // medium
+            launcher_velocity = 2100.0;
+        } else if (gamepad2.dpad_right) { // low-mid (new)
+            launcher_velocity = 1800.0;
+        } else if (gamepad2.dpad_down) { // low
+            launcher_velocity = 1500.0 ;
+        }
+        launcher.setVelocity(launcher_velocity);
     }
 }
