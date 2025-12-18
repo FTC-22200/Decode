@@ -18,13 +18,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public  class DecodeAutoRedBack extends OpMode {
     private DcMotorEx launcher;
     // launcher velocities (tune to your hardware)
-    final double LAUNCHER_TARGET_VELOCITY = 2150.0;
-    final double LAUNCHER_MIN_VELOCITY = 2050.0;
+    final double LAUNCHER_TARGET_VELOCITY = 2135.0;
+    final double LAUNCHER_MIN_VELOCITY = 2085.0;
 
     double shotsToFire = 3;
     double TIME_BETWEEN_SHOTS = 3.0;    // reduced cycle time (tune)
     double boxServoTime = 0.7;          // servo dwell time (tune)
-    double robotRotationAngle = 42.5;
+    double robotRotationAngle = 40.5;
     boolean driveOffLine = true;
 
     private ElapsedTime shotTimer = new ElapsedTime();
