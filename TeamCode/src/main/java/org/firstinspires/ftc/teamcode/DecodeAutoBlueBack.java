@@ -18,13 +18,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public  class DecodeAutoBlueBack extends OpMode {
     private DcMotorEx launcher;
     // launcher velocities (tune to your hardware)
-    final double LAUNCHER_TARGET_VELOCITY = 2150.0;
-    final double LAUNCHER_MIN_VELOCITY = 2050.0;
+    double LAUNCHER_TARGET_VELOCITY = 2135.0;
+    double LAUNCHER_MIN_VELOCITY = 2085.0;
 
     double shotsToFire = 3;
     double TIME_BETWEEN_SHOTS = 3.0;    // reduced cycle time (tune)
-    double boxServoTime = 1.5;          // servo dwell time (tune)
-    double robotRotationAngle = -49.5;
+    double boxServoTime = 0.7;          // servo dwell time (tune)
+    double robotRotationAngle = -48.5;
     boolean driveOffLine = true;
 
     private ElapsedTime shotTimer = new ElapsedTime();
@@ -171,7 +171,10 @@ public  class DecodeAutoBlueBack extends OpMode {
             case WAIT_FOR_LAUNCH:
                 if (launch(false)) {
                     shotsToFire -= 1;
-                    if (shotsToFire > 0) {
+                    if (shotsToFire > 1) {
+                        autonomousState = AutonomousState.LAUNCH;
+                    } else if (shotsToFire < 2) {
+                        LAUNCHER_MIN_VELOCITY = 2100.0;
                         autonomousState = AutonomousState.LAUNCH;
                     } else {
                         // finished firing all shots; stop launcher and drive back to middle
