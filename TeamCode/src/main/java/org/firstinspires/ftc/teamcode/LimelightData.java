@@ -157,21 +157,22 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
                 if (Math.abs(tx) < 1.0) turnPower = 0;
 
                 // Rotate robot via above
-                frontLeft.setPower(-turnPower);
-                backLeft.setPower(-turnPower);
-                frontRight.setPower(turnPower);
-                backRight.setPower(turnPower);
+                fL_Motor += -turnPower;
+                bL_Motor += -turnPower;
+                fR_Motor += turnPower;
+                bR_Motor += turnPower;
+
 
                 // Telemetry for data
                 telemetry.addData("Left/Right offset: ", tx);
                 telemetry.addData("Turn Power: ", turnPower);
-            } else {
-                // Regular Motor Controls
-                frontLeft.setPower(fL_Motor);
-                backLeft.setPower(bL_Motor);
-                frontRight.setPower(fR_Motor);
-                backRight.setPower(bR_Motor);
             }
+            // Regular Motor Controls
+            frontLeft.setPower(fL_Motor);
+            backLeft.setPower(bL_Motor);
+            frontRight.setPower(fR_Motor);
+            backRight.setPower(bR_Motor);
+
 
             // Intake motor's control
             if (gamepad2.right_stick_y != 0.0) {
