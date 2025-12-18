@@ -20,7 +20,8 @@ public class DecodeDriveMode extends LinearOpMode {
     private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
-    CRServo intakeMotor2;
+    CRServo leftFeeder;
+    CRServo rightFeeder;
     Servo rgbLight; // For color
 
     @Override
@@ -32,7 +33,8 @@ public class DecodeDriveMode extends LinearOpMode {
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        intakeMotor2 = hardwareMap.get(CRServo.class, "intakeMotor2");
+        leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
+        rightFeeder = hardwareMap.get(CRServo.class, "rightFeeder");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
         colorSensor = hardwareMap.get(ColorSensor.class, "Color Sensor");
@@ -64,6 +66,8 @@ public class DecodeDriveMode extends LinearOpMode {
 
             if (gamepad2.right_trigger > 0) {
                 launch();
+            } else if (gamepad2.left_trigger > 0) {
+                launcher.setPower(-1.0);
             } else {
                 launcher.setPower(0.0);
             }
@@ -106,14 +110,26 @@ public class DecodeDriveMode extends LinearOpMode {
             // Intake motor's control
             if (gamepad2.right_stick_y != 0.0) {
                 intakeMotor.setPower(gamepad2.right_stick_y);
-                intakeMotor2.setPower(gamepad2.right_stick_y);
             } else {
                 intakeMotor.setPower(0.0);
-                intakeMotor2.setPower(0.0);
+            }
+
+            if (gamepad2.right_bumper) {
+                leftFeeder.setPower(-1.0);
+                rightFeeder.setPower(1.0);
+            } else {
+                leftFeeder.setPower(0.0);
+                rightFeeder.setPower(0.0);
             }
 
             // Box servo to push the ball into the box
-            if (gamepad2.y && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
+            /*if (gamepad2.y && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
+                boxServo.setPosition(0.6);
+                boxServoUp = true;
+                boxServoTimer.reset();
+            }
+            */
+            if (gamepad2.y && !boxServoUp) {
                 boxServo.setPosition(0.6);
                 boxServoUp = true;
                 boxServoTimer.reset();
@@ -144,6 +160,12 @@ public class DecodeDriveMode extends LinearOpMode {
                 rgbLight.setPosition(1.0);
             }
 
+            if (gamepad2.left_bumper) {
+                launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            } else {
+                launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+            }
+
             //Incremental velocity power
             if (gamepad2.left_stick_y > 0.0) {
                 launcher_velocity += 100;
@@ -160,13 +182,13 @@ public class DecodeDriveMode extends LinearOpMode {
     }
     public void launch() { // changed from private
         if (gamepad2.dpad_up) { // high
-            launcher_velocity = 2600.0; // originally 2700.0
+            launcher_velocity = 2225.0; // AIDEN sucks bad >:((
         } else if (gamepad2.dpad_left) { // medium
-            launcher_velocity = 2400.0;
+            launcher_velocity = 2100.0;
         } else if (gamepad2.dpad_right) { // low-mid (new)
             launcher_velocity = 1800.0;
         } else if (gamepad2.dpad_down) { // low
-            launcher_velocity = 1200.0 ;
+            launcher_velocity = 1500.0 ;
         }
         launcher.setVelocity(launcher_velocity);
     }
