@@ -6,17 +6,28 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
+//import com.qualcomm.robotcore.hardware.AnalogInput;
 
-
+// For limelight
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.IMU;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
-public class DecodeDriveMode extends LinearOpMode {
+public class LimelightDecodeDriveMode extends LinearOpMode {
     double launcher_velocity = 3000.0;
     boolean boxServoUp = false;
+    //private AnalogInput laserAnalog;
+    private static final double MAX_VOLTS = 3.3;
+    private static final double MAX_DISTANCE_MM = 1000.0;
     private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
@@ -24,10 +35,15 @@ public class DecodeDriveMode extends LinearOpMode {
     CRServo rightFeeder;
     Servo rgbLight; // For color
 
+    // HERE //
+    private Limelight3A limelight;
+    private IMU imu;
+
     @Override
     public void runOpMode() {
         ColorSensor colorSensor;
         // Motor config
+        //laserAnalog = hardwareMap.get(AnalogInput.class, "laserAnalogInput");
         DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
         DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
@@ -45,16 +61,47 @@ public class DecodeDriveMode extends LinearOpMode {
         backLeft.setDirection(DcMotorEx.Direction.FORWARD);
         frontRight.setDirection(DcMotorEx.Direction.REVERSE);
         backRight.setDirection(DcMotorEx.Direction.REVERSE);
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         launcher.setDirection(DcMotorEx.Direction.FORWARD);
 
-        final int CYCLE_MS = 50;
+        // Limelight initalization HERE!
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(8);
+
+        // IMU HERE!
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot (
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
+        );
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        final int CYCLE_MS = 5;
 
         waitForStart();
         if (isStopRequested()) return;
 
+        // HERE //
+        limelight.start();
+
         while (opModeIsActive()) {
-            // Color declaration
+            // HERE //
+            YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+            limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
+
+            //double volts = laserAnalog.getVoltage();
+
+            // Convert voltage to distance in millimeters (linear mapping)
+            //double distanceMM = (volts / MAX_VOLTS) * MAX_DISTANCE_MM;
+
+            // Telemetry
+            //telemetry.addData("Voltage (V)", "%.3f", volts);
+            //telemetry.addData("Distance (mm)", "%.1f", distanceMM);
+
             int red = colorSensor.red();
             int blue = colorSensor.blue();
             int green = colorSensor.green();
@@ -102,10 +149,43 @@ public class DecodeDriveMode extends LinearOpMode {
             double fR_Motor = (y - x - rx) / denominator;
             double bR_Motor = (y + x - rx) / denominator;
 
+
+            // Limelight alignment HERE //
+            LLResult llResult = limelight.getLatestResult();
+            boolean isValid = llResult != null && llResult.isValid();
+
+            if (isValid) {
+                telemetry.addLine("AprilTag Detected");
+            } else {
+                telemetry.addLine("No AprilTag Detected");
+            }
+
+            // Press a to turn on auto-aim
+            if (gamepad1.right_trigger > 0.0 && isValid) {
+                double tx = llResult.getTx();
+                // 'amt' of turn
+                double kP = 0.02;
+                double turnPower = kP * tx;
+                turnPower = Math.max(-0.3, Math.min(0.3, turnPower));
+                if (Math.abs(tx) < 1.0) turnPower = 0;
+
+                // Rotate robot via above
+                fL_Motor += -turnPower;
+                bL_Motor += -turnPower;
+                fR_Motor += turnPower;
+                bR_Motor += turnPower;
+
+
+                // Telemetry for data
+                telemetry.addData("Left/Right offset: ", tx);
+                telemetry.addData("Turn Power: ", turnPower);
+            }
+            // Regular Motor Controls
             frontLeft.setPower(fL_Motor);
             backLeft.setPower(bL_Motor);
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
+
 
             // Intake motor's control
             if (gamepad2.right_stick_y != 0.0) {
@@ -121,14 +201,6 @@ public class DecodeDriveMode extends LinearOpMode {
                 leftFeeder.setPower(0.0);
                 rightFeeder.setPower(0.0);
             }
-
-            // Box servo to push the ball into the box
-            /*if (gamepad2.y && launcher.getVelocity() >= launcher_velocity && !boxServoUp) {
-                boxServo.setPosition(0.6);
-                boxServoUp = true;
-                boxServoTimer.reset();
-            }
-            */
             if (gamepad2.y && !boxServoUp) {
                 boxServo.setPosition(0.6);
                 boxServoUp = true;
