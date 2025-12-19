@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
+import com.qualcomm.robotcore.hardware.AnalogInput;
 
 // For limelight
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -25,6 +25,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class LimelightDecodeDriveMode extends LinearOpMode {
     double launcher_velocity = 3000.0;
     boolean boxServoUp = false;
+    private AnalogInput laserAnalog;
+    private static final double MAX_VOLTS = 3.3;
+    private static final double MAX_DISTANCE_MM = 4000.0;
     private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
@@ -40,6 +43,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
     public void runOpMode() {
         ColorSensor colorSensor;
         // Motor config
+        laserAnalog = hardwareMap.get(AnalogInput.class, "laserAnalogInput");
         DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
         DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
         DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
@@ -88,6 +92,15 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             // HERE //
             YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
             limelight.updateRobotOrientation(orientation.getYaw(AngleUnit.DEGREES));
+
+            double volts = laserAnalog.getVoltage();
+
+            // Convert voltage to distance in millimeters (linear mapping)
+            double distanceInch = ((volts / MAX_VOLTS) * MAX_DISTANCE_MM) * 25.4;
+
+            // Telemetry
+            telemetry.addData("Voltage (V)", "%.3f", volts);
+            telemetry.addData("Distance (mm)", "%.1f", distanceInch);
 
             int red = colorSensor.red();
             int blue = colorSensor.blue();
@@ -173,6 +186,13 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             frontRight.setPower(fR_Motor);
             backRight.setPower(bR_Motor);
 
+            if (gamepad2.b) {
+                if (distanceInch < 60) {
+                    launcher_velocity = 33.333*distanceInch;
+                } else {
+                    launcher_velocity = 1800+ 4.615*distanceInch;
+                }
+            }
 
             // Intake motor's control
             if (gamepad2.right_stick_y != 0.0) {
