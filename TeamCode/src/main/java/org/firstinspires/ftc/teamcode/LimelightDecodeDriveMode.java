@@ -5,11 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 
@@ -21,9 +18,17 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+
+import java.util.Locale;
+
 @TeleOp
 public class LimelightDecodeDriveMode extends LinearOpMode {
     double launcher_velocity = 3000.0;
+    GoBildaPinpointDriver odo;
+    double oldTime = 0;
     boolean boxServoUp = false;
     private AnalogInput laserAnalog;
     private static final double MAX_VOLTS = 3.3;
@@ -45,8 +50,8 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         // Motor config
         laserAnalog = hardwareMap.get(AnalogInput.class, "laserAnalogInput");
         DcMotorEx frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class,"backLeft");
-        DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class,"frontRight");
+        DcMotorEx backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        DcMotorEx frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         DcMotorEx backRight = hardwareMap.get(DcMotorEx.class, "backRight");
         intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
         leftFeeder = hardwareMap.get(CRServo.class, "leftFeeder");
@@ -74,11 +79,41 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
         // IMU HERE!
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot (
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         );
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        // Odometry setup
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+
+        // Measure in milimeters at the meeting, this is not currently accurate.
+        odo.setOffsets(-84.0, -168.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
+
+        // Type of odometry arm that the robot is using.
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD);
+
+        //Direction
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
+        /*
+        Before running the robot, recalibrate the IMU. This needs to happen when the robot is stationary
+        The IMU will automatically calibrate when first powered on, but recalibrating before running
+        the robot is a good idea to ensure that the calibration is "good".
+        resetPosAndIMU will reset the position to 0,0,0 and also recalibrate the IMU.
+        This is recommended before you run your autonomous, as a bad initial calibration can cause
+        an incorrect starting value for x, y, and heading.
+         */
+        odo.recalibrateIMU();
+        odo.resetPosAndIMU();
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("X offset", odo.getXOffset(DistanceUnit.MM));
+        telemetry.addData("Y offset", odo.getYOffset(DistanceUnit.MM));
+        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
+        telemetry.addData("Heading Scalar", odo.getYawScalar());
+        telemetry.update();
 
         final int CYCLE_MS = 5;
 
@@ -98,6 +133,8 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             // Convert voltage to distance in millimeters (linear mapping)
             double distanceInch = ((volts / MAX_VOLTS) * MAX_DISTANCE_MM) * 25.4;
 
+            odo.update();
+
             // Telemetry
             telemetry.addData("Voltage (V)", "%.3f", volts);
             telemetry.addData("Distance (mm)", "%.1f", distanceInch);
@@ -110,6 +147,25 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             telemetry.addData("Purple", purple);
             telemetry.addData("Red", red);
             telemetry.addData("Blue", blue);
+
+            double newTime = getRuntime();
+            double loopTime = newTime - oldTime;
+            double frequency = 1 / loopTime;
+            oldTime = newTime;
+
+            /*
+            gets the current Position (x & y in mm, and heading in degrees) of the robot, and prints it.
+             */
+            Pose2D pos = odo.getPosition();
+            String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("Position", data);
+
+            /*
+            gets the current Velocity (x & y in mm/sec and heading in degrees/sec) and prints it.
+             */
+            String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", odo.getVelX(DistanceUnit.MM), odo.getVelY(DistanceUnit.MM), odo.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES));
+            telemetry.addData("Velocity", velocity);
+
 
             if (gamepad2.right_trigger > 0) {
                 launch();
@@ -141,7 +197,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
             // To decrease 'noise' via small movements
             if (Math.abs(x) < 0.05) x = 0;
-            if (Math.abs(y) < 0.05) y= 0;
+            if (Math.abs(y) < 0.05) y = 0;
             if (Math.abs(rx) < 0.05) rx = 0;
 
             double fL_Motor = (y + x + rx) / denominator;
@@ -188,9 +244,9 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
             if (gamepad2.b) {
                 if (distanceInch < 60) {
-                    launcher_velocity = 33.333*distanceInch;
+                    launcher_velocity = 33.333 * distanceInch;
                 } else {
-                    launcher_velocity = 1800+ 4.615*distanceInch;
+                    launcher_velocity = 1800 + 4.615 * distanceInch;
                 }
             }
 
@@ -252,6 +308,23 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
                 launcher_velocity -= 100;
             }
 
+            /*
+            Gets the Pinpoint device status. Pinpoint can reflect a few states. But we'll primarily see
+            READY: the device is working as normal
+            CALIBRATING: the device is calibrating and outputs are put on hold
+            NOT_READY: the device is resetting from scratch. This should only happen after a power-cycle
+            FAULT_NO_PODS_DETECTED - the device does not detect any pods plugged in
+            FAULT_X_POD_NOT_DETECTED - The device does not detect an X pod plugged in
+            FAULT_Y_POD_NOT_DETECTED - The device does not detect a Y pod plugged in
+            FAULT_BAD_READ - The firmware detected a bad I²C read, if a bad read is detected, the device status is updated and the previous position is reported
+            */
+            telemetry.addData("Status", odo.getDeviceStatus());
+
+            telemetry.addData("Pinpoint Frequency", odo.getFrequency()); //prints/gets the current refresh rate of the Pinpoint
+
+            telemetry.addData("REV Hub Frequency: ", frequency); //prints the control system refresh rate
+            telemetry.update();
+
             telemetry.update();
             telemetry.addData("Launcher target velocity : ", launcher_velocity);
             telemetry.addData("Acc target velocity: ", launcher.getVelocity());
@@ -259,6 +332,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             idle();
         }
     }
+
     public void launch() { // changed from private
         if (gamepad2.dpad_up) { // high
             launcher_velocity = 2225.0; // AIDEN sucks bad >:((
@@ -267,7 +341,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         } else if (gamepad2.dpad_right) { // low-mid (new)
             launcher_velocity = 1800.0;
         } else if (gamepad2.dpad_down) { // low
-            launcher_velocity = 1500.0 ;
+            launcher_velocity = 1500.0;
         }
         launcher.setVelocity(launcher_velocity);
     }
