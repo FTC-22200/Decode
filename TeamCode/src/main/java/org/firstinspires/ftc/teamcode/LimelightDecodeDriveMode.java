@@ -166,7 +166,16 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             String velocity = String.format(Locale.US, "{XVel: %.3f, YVel: %.3f, HVel: %.3f}", odo.getVelX(DistanceUnit.MM), odo.getVelY(DistanceUnit.MM), odo.getHeadingVelocity(UnnormalizedAngleUnit.DEGREES));
             telemetry.addData("Velocity", velocity);
 
-
+            if (gamepad2.dpad_up) { // high
+                launcher_velocity = 2225.0; // AIDEN sucks bad >:((
+            } else if (gamepad2.dpad_left) { // medium
+                launcher_velocity = 2100.0;
+            } else if (gamepad2.dpad_right) { // low-mid (new)
+                launcher_velocity = 1800.0;
+            } else if (gamepad2.dpad_down) { // low
+                launcher_velocity = 1500.0;
+            }
+            
             if (gamepad2.right_trigger > 0) {
                 launch();
             } else if (gamepad2.left_trigger > 0) {
@@ -334,15 +343,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
     }
 
     public void launch() { // changed from private
-        if (gamepad2.dpad_up) { // high
-            launcher_velocity = 2225.0; // AIDEN sucks bad >:((
-        } else if (gamepad2.dpad_left) { // medium
-            launcher_velocity = 2100.0;
-        } else if (gamepad2.dpad_right) { // low-mid (new)
-            launcher_velocity = 1800.0;
-        } else if (gamepad2.dpad_down) { // low
-            launcher_velocity = 1500.0;
-        }
+        
         launcher.setVelocity(launcher_velocity);
     }
 }
