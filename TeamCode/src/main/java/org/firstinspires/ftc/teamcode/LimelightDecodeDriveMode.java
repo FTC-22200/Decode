@@ -346,4 +346,20 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         
         launcher.setVelocity(launcher_velocity);
     }
+    public double distanceToGoalMm(double robotXmm, double robotYmm, boolean isRed) {
+        if (isRed) {
+            double goalX = 73.25 * 25.4; // 60 in → mm
+            double goalY = 69.15 * 25.4;
+            double dx = goalX - robotXmm;
+            double dy = goalY - robotYmm;
+            return Math.hypot(dx, dy); // mm
+        } else {
+            double goalX = -73.25 * 25.4;
+            double goalY = 69.15 * 25.4;
+            double dx = goalX - robotXmm;
+            double dy = goalY - robotYmm;
+            return Math.hypot(dx, dy); // mm
+        }
+    }
+}
 }
