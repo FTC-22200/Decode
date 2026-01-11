@@ -173,6 +173,7 @@ public  class DecodeAutoBlueFrontOld extends OpMode {
         } else if (gamepad1.a) {
             shootExtraMo = 0.0;
         }
+        telemetry.addData("PRESS B, ", "IN ORDER TO SHOOT AN EXTRA THREE BALLS AFTER THEY ARE COLLECTED AT THE END OF AUTO, AND A TO UNDO THAT DECISION.");
         telemetry.addData("PRESS X", " TO NOT DRIVE OFF THE LINE! (and PRESS Y TO DRIVE OFF LINE IF X WAS ALREADY PRESSED.");
         telemetry.addData("Drive off line: ", driveOffLine);
         telemetry.addData("Aiden", " sucks >:(");
