@@ -3,9 +3,11 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,6 +19,8 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -41,6 +45,14 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
 
     private AnalogInput laserAnalog;
+    public double highVelocity = 1500.0;
+    public double lowVelocity = 900.0;
+    double curTargetVelocity = highVelocity;
+    double F = 0.0;
+    double P = 0.0;
+    double[] stepSizes = {10.0, 1.0, 0.1, 0.001, 0.0001};
+    int stepIndex = 1;
+    private double distance;
     private static final double MAX_VOLTS = 3.3;
     private static final double MAX_DISTANCE_MM = 4000.0;
     private ElapsedTime boxServoTimer = new ElapsedTime();
@@ -49,13 +61,13 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
     CRServo leftFeeder;
     CRServo rightFeeder;
     CRServo topWheel;
-    Servo rgbLight; // For c olor
+    Servo rgbLight; // For color
+
 
 
     // HERE //
     private Limelight3A limelight;
     private IMU imu;
-
 
     @Override
     public void runOpMode() {
@@ -89,6 +101,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeMotor.setDirection(DcMotor.Direction.FORWARD);
         launcher.setDirection(DcMotorEx.Direction.FORWARD);
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         // Limelight initalization HERE!
@@ -200,6 +213,8 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             double frequency = 1 / loopTime;
             oldTime = newTime;
 
+            // PIDF Rules
+
 
            /*
            gets the current Position (x & y in mm, and heading in degrees) of the robot, and prints it.
@@ -217,7 +232,8 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
 
             if (gamepad2.dpad_up) { // high
-                launcher_velocity = 2225.0; // AIDEN sucks bad >:((
+                double calculatedRPM = calculateRPM(distance);
+                launcher_velocity = calculatedRPM; // AIDEN sucks bad >:((
             } else if (gamepad2.dpad_left) { // medium
                 launcher_velocity = 2100.0;
             } else if (gamepad2.dpad_right) { // low-mid (new)
@@ -276,8 +292,59 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             LLResult llResult = limelight.getLatestResult();
             boolean isValid = llResult != null && llResult.isValid();
 
+            if (gamepad1.yWasPressed()) {
+                if (curTargetVelocity == highVelocity) {
+                    curTargetVelocity = lowVelocity;
+                } else {
+                    curTargetVelocity = highVelocity;
+                }
+            }
+
+            // PID STUFF
+
+            if (gamepad1.bWasPressed()) {
+
+                stepIndex = (stepIndex + 1) % stepSizes.length;
+            }
+
+            if (gamepad1.dpadRightWasPressed()) {
+                F += stepSizes[stepIndex];
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                F -= stepSizes[stepIndex];
+            }
+
+            if (gamepad1.dpadUpWasPressed()) {
+                P += stepSizes[stepIndex];
+            }
+
+            if (gamepad1.dpadDownWasPressed()) {
+                P -= stepSizes[stepIndex];
+            }
+
+            PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
+            launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+
+            launcher.setVelocity(curTargetVelocity);
+
+            double curVelocity = launcher.getVelocity();
+            double error = curTargetVelocity - curVelocity;
+
+            telemetry.addData("Target Velocity PIDF", curTargetVelocity);
+            telemetry.addData("Current Velocity PIDF", curVelocity);
+            telemetry.addData("Error PIDF", error);
+            telemetry.addLine("-------------");
+            telemetry.addData("Tuning P PIDF", P);
+            telemetry.addData("Tuning F PIDF", F);
+            telemetry.addData("Step Size PIDF", stepSizes[stepIndex]);
+            telemetry.addLine("--------------");
+
 
             if (isValid) {
+                Pose3D botpose = llResult.getBotpose_MT2();
+                distance = getDistanceFromTag(llResult.getTy());
+                telemetry.addData("Distance", distance);
+                telemetry.addData("LL Timestamp", llResult.getTimestamp());
                 telemetry.addLine("AprilTag Detected");
             } else {
                 telemetry.addLine("No AprilTag Detected");
@@ -430,9 +497,26 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         }
     }
 
+    private double getDistanceFromTag(double ty) {
+        double cameraHeight = 34.0;   // inches — measure yours
+        double tagHeight = 75.0;     // inches — height of the AprilTag center
+        double cameraAngle = 3.5;   // degrees — measure your camera tilt
+
+        double angleToTag = Math.toRadians(cameraAngle + ty);
+        return (tagHeight - cameraHeight) / Math.tan(angleToTag);
+    }
+
+    private double calculateRPM(double distance) {
+        double h = 0.86;
+        double angle = 45;
+        double d = distance/100;
+        double V_exit = Math.sqrt((9.8 * Math.pow(d, 2))/(2 * Math.pow(Math.cos(angle), 2)*(d * Math.tan(angle) - h)));
+
+        double radius = 0.048;
+        return (60/(2*Math.PI*radius)) * (V_exit/0.6);
+    }
 
     public void launch() { // changed from private
-
 
         launcher.setVelocity(launcher_velocity);
     }
@@ -456,4 +540,3 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         }
     }
 }
-
