@@ -58,6 +58,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
     private ElapsedTime boxServoTimer = new ElapsedTime();
     private DcMotor intakeMotor;
     private DcMotorEx launcher;
+    private DcMotor boxMotor;
     CRServo leftFeeder;
     CRServo rightFeeder;
     CRServo topWheel;
@@ -86,6 +87,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         topWheel = hardwareMap.get(CRServo.class, "topWheel");
         Servo boxServo = hardwareMap.get(Servo.class, "boxServo");
         launcher = hardwareMap.get(DcMotorEx.class, "launcherMotor");
+        boxMotor = hardwareMap.get(DcMotorEx.class, "boxMotor");
         colorSensor = hardwareMap.get(ColorSensor.class, "Color Sensor");
         rgbLight = hardwareMap.get(Servo.class, "RGB Light");
 
@@ -292,7 +294,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
             LLResult llResult = limelight.getLatestResult();
             boolean isValid = llResult != null && llResult.isValid();
 
-            if (gamepad1.yWasPressed()) {
+            if (gamepad1.y) {
                 if (curTargetVelocity == highVelocity) {
                     curTargetVelocity = lowVelocity;
                 } else {
@@ -302,30 +304,29 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
             // PID STUFF
 
-            if (gamepad1.bWasPressed()) {
+            if (gamepad1.b) {
 
                 stepIndex = (stepIndex + 1) % stepSizes.length;
             }
 
-            if (gamepad1.dpadRightWasPressed()) {
+            if (gamepad1.dpad_right) {
                 F += stepSizes[stepIndex];
             }
-            if (gamepad1.dpadLeftWasPressed()) {
+            if (gamepad1.dpad_left) {
                 F -= stepSizes[stepIndex];
             }
 
-            if (gamepad1.dpadUpWasPressed()) {
+            if (gamepad1.dpad_up) {
                 P += stepSizes[stepIndex];
             }
 
-            if (gamepad1.dpadDownWasPressed()) {
+            if (gamepad1.dpad_down) {
                 P -= stepSizes[stepIndex];
             }
 
-            PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
+            PIDFCoefficients pidfCoefficients = new PIDFCoefficients(175.0, 0, 0, 12.663387);
             launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
 
-            launcher.setVelocity(curTargetVelocity);
 
             double curVelocity = launcher.getVelocity();
             double error = curTargetVelocity - curVelocity;
@@ -356,7 +357,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
                 double tx = llResult.getTx();
                 // 'amt' of turn
                 double kP = 0.02;
-                double turnPower = kP * tx;
+                double turnPower = kP * (tx+3);
                 turnPower = Math.max(-0.3, Math.min(0.3, turnPower));
                 if (Math.abs(tx) < 1.0) turnPower = 0;
 
@@ -395,14 +396,22 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
 
 
             // Intake motor's control
-            if (gamepad2.right_stick_y != 0.0) {
+            if (gamepad2.right_stick_y > 0.0) {
                 intakeMotor.setPower(gamepad2.right_stick_y);
+                leftFeeder.setPower(-1.0);
+                rightFeeder.setPower(1.0);
+            } else if (gamepad2.right_stick_y < 0.0) {
+                intakeMotor.setPower(gamepad2.right_stick_y);
+                leftFeeder.setPower(1.0);
+                rightFeeder.setPower(-1.0);
             } else {
                 intakeMotor.setPower(0.0);
+                leftFeeder.setPower(0.0);
+                rightFeeder.setPower(0.0);
             }
 
 
-            if (gamepad2.right_bumper) {
+            /*if (gamepad2.right_bumper) {
                 leftFeeder.setPower(-1.0);
                 rightFeeder.setPower(1.0);
                 topWheel.setPower(-1.0);
@@ -419,11 +428,23 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
                 boxServo.setPosition(0.6);
                 boxServoUp = true;
                 boxServoTimer.reset();
-            }
+            }*/
             // Timer
             if (boxServoUp && boxServoTimer.seconds() > 0.75) {
                 boxServo.setPosition(0.85);
                 boxServoUp = false;
+            }
+
+            if (gamepad2.right_bumper) {
+                boxMotor.setPower(1.0);
+                telemetry.addData("Should be running", boxMotor.getPowerFloat());
+                topWheel.setPower(-1.0);
+            } else if (gamepad2.x) {
+                boxMotor.setPower(-1.0);
+                topWheel.setPower(1.0);
+            } else {
+                boxMotor.setPower(0.0);
+                topWheel.setPower(0.0);
             }
 
 
@@ -498,12 +519,12 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
     }
 
     private double getDistanceFromTag(double ty) {
-        double cameraHeight = 34.0;   // inches — measure yours
-        double tagHeight = 75.0;     // inches — height of the AprilTag center
-        double cameraAngle = 3.5;   // degrees — measure your camera tilt
+        double cameraHeight = 33.7;  // 33.7 in → m
+        double tagHeight    = 76;  // 76.0 in → m
+        double cameraAngle  = Math.toRadians(3.1); // radians
 
-        double angleToTag = Math.toRadians(cameraAngle + ty);
-        return (tagHeight - cameraHeight) / Math.tan(angleToTag);
+        double angleToTag = cameraAngle + Math.toRadians(ty);
+        return (tagHeight - cameraHeight) / Math.tan(angleToTag); // meters
     }
 
     private double calculateRPM(double distance) {
@@ -513,7 +534,7 @@ public class LimelightDecodeDriveMode extends LinearOpMode {
         double V_exit = Math.sqrt((9.8 * Math.pow(d, 2))/(2 * Math.pow(Math.cos(angle), 2)*(d * Math.tan(angle) - h)));
 
         double radius = 0.048;
-        return (60/(2*Math.PI*radius)) * (V_exit/0.6);
+        return (60/(2*Math.PI*radius)) * (V_exit/0.5);
     }
 
     public void launch() { // changed from private
